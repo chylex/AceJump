@@ -1,90 +1,132 @@
 package org.acejump.control
 
+import com.intellij.codeInsight.editorActions.SelectWordUtil
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR
 import com.intellij.openapi.diagnostic.Logger
+import com.intellij.openapi.diagnostic.debug
+import com.intellij.openapi.editor.CaretState
+import com.intellij.openapi.editor.ScrollType
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.DumbAwareAction
+import com.intellij.openapi.util.TextRange
 import org.acejump.control.Handler.regexSearch
 import org.acejump.label.Pattern
 import org.acejump.label.Pattern.ALL_WORDS
+import org.acejump.search.Finder
 import org.acejump.search.JumpMode
 import org.acejump.search.Jumper
-import org.acejump.search.getNameOfFileInEditor
 import org.acejump.view.Boundary.*
+import org.acejump.view.Model
 import org.acejump.view.Model.boundaries
 import org.acejump.view.Model.defaultBoundary
 import org.acejump.view.Model.editor
+import org.acejump.view.Model.viewBounds
 
 /**
  * Entry point for all actions. The IntelliJ Platform calls AceJump here.
  */
 
-open class AceAction: DumbAwareAction() {
-  open val logger = Logger.getInstance(javaClass)
-  override fun update(action: AnActionEvent) {
+sealed class AceAction: DumbAwareAction() {
+  val logger = Logger.getInstance(javaClass)
+
+  final override fun update(action: AnActionEvent) {
     action.presentation.isEnabled = action.getData(EDITOR) != null
   }
 
-  override fun actionPerformed(e: AnActionEvent) {
+  final override fun actionPerformed(e: AnActionEvent) {
     editor = e.getData(EDITOR) ?: return
     boundaries = defaultBoundary
-    val textLength = editor.document.textLength
-    logger.info("Invoked on ${editor.getNameOfFileInEditor()} ($textLength)")
+    logger.debug { "Invoked on ${FileDocumentManager.getInstance().getFile(editor.document)?.presentableName} (${editor.document.textLength})" }
     Handler.activate()
-    customize()
+    invoke()
   }
 
-  open fun customize() = Jumper.cycleMode()
-}
+  abstract fun invoke()
 
-/**
- * When target mode is activated, selecting a tag will highlight an entire word.
- */
+  object ActivateOrCycleMode : AceAction() {
+    override fun invoke() = Jumper.cycleMode()
+  }
 
-class AceTargetAction: AceAction() {
-  override fun customize() = Jumper.toggleMode(JumpMode.TARGET)
-}
+  object ToggleJumpMode: AceAction() {
+    override fun invoke() = Jumper.toggleMode(JumpMode.JUMP)
+  }
 
-/*
- * When line mode is activated, we will tag the beginning and end of each line.
- *
- * TODO: https://github.com/acejump/AceJump/issues/327
- * TODO: https://github.com/acejump/AceJump/issues/340
- */
+  object ToggleJumpEndMode: AceAction() {
+    override fun invoke() = Jumper.toggleMode(JumpMode.JUMP_END)
+  }
 
-class AceLineAction: AceAction() {
-  override fun customize() = regexSearch(Pattern.LINE_MARK)
-}
+  object ToggleSelectWordMode: AceAction() {
+    override fun invoke() = Jumper.toggleMode(JumpMode.TARGET)
+  }
 
-/**
- * When declaration mode is activated, selecting a tag will take us to the
- * definition (i.e. declaration) of the token in the editor, if it exists.
- */
+  object ToggleDefinitionMode: AceAction() {
+    override fun invoke() = Jumper.toggleMode(JumpMode.DEFINE)
+  }
 
-class AceDefinitionAction: AceAction() {
-  override fun customize() = Jumper.toggleMode(JumpMode.DEFINE)
-}
+  object ToggleAllLinesMode: AceAction() {
+    override fun invoke() = regexSearch(Pattern.LINE_MARK)
+  }
 
-/**
- * When word mode is activated, we will tag all words on the screen.
- */
+  object ToggleAllWordsMode: AceAction() {
+    override fun invoke() = regexSearch(ALL_WORDS, SCREEN_BOUNDARY)
+  }
 
-class AceWordAction: AceAction() {
-  override fun customize() = regexSearch(ALL_WORDS, SCREEN_BOUNDARY)
-}
+  object ToggleAllWordsForwardMode: AceAction() {
+    override fun invoke() = regexSearch(ALL_WORDS, AFTER_CARET_BOUNDARY)
+  }
 
-/**
- * Search for words from the start of the screen to the caret
- */
+  object ToggleAllWordsBackwardsMode: AceAction() {
+    override fun invoke() = regexSearch(ALL_WORDS, BEFORE_CARET_BOUNDARY)
+  }
 
-class AceWordForwardAction: AceAction() {
-  override fun customize() = regexSearch(ALL_WORDS, AFTER_CARET_BOUNDARY)
-}
+  object ActOnHighlightedWords: AceAction() {
+    override fun invoke() = when(JumpMode.mode) {
+      JumpMode.DISABLED -> {}
+      JumpMode.JUMP -> if (editor.caretModel.supportsMultipleCarets()) jumpToAll() else Unit
+      JumpMode.JUMP_END -> if (editor.caretModel.supportsMultipleCarets()) jumpToWordEnds() else Unit
+      JumpMode.TARGET -> if (editor.caretModel.supportsMultipleCarets()) selectAllWords() else Unit
+      JumpMode.DEFINE -> {}
+    }
 
-/**
- * Search for words from the caret position to the start of the screen
- */
+    private fun jumpToAll() {
+      val carets = Finder.allResults().map {
+        CaretState(editor.offsetToLogicalPosition(it), null, null)
+      }
+      if (carets.isEmpty()) return
+      Handler.reset()
+      editor.caretModel.caretsAndSelections = carets
+      editor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
+    }
 
-class AceWordBackwardsAction: AceAction() {
-  override fun customize() = regexSearch(ALL_WORDS, BEFORE_CARET_BOUNDARY)
+    private fun jumpToWordEnds() {
+      val ranges = ArrayList<TextRange>()
+      for (offset in Finder.allResults()) {
+        SelectWordUtil.addWordSelection(editor.settings.isCamelWords, Model.editorText, offset, ranges)
+      }
+      if (ranges.isEmpty()) return
+
+      Handler.reset()
+      editor.caretModel.caretsAndSelections = ranges.map {
+        CaretState(editor.offsetToLogicalPosition(it.endOffset), null, null)
+      }
+      editor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
+    }
+
+    private fun selectAllWords() {
+      val ranges = ArrayList<TextRange>()
+      for (offset in Finder.allResults()) {
+        SelectWordUtil.addWordSelection(editor.settings.isCamelWords, Model.editorText, offset, ranges)
+      }
+      if (ranges.isEmpty()) return
+
+      Handler.reset()
+      editor.caretModel.caretsAndSelections = ranges.map {
+        val start = editor.offsetToLogicalPosition(it.startOffset)
+        val end = editor.offsetToLogicalPosition(it.endOffset)
+        CaretState(end, start, end)
+      }
+      editor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
+    }
+  }
 }

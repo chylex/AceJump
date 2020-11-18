@@ -13,8 +13,9 @@ enum class JumpMode {
 
   companion object: Resettable {
     private var modeIndex = 0
-    private var mode: JumpMode = DISABLED
-      set(value) {
+
+    var mode: JumpMode = DISABLED
+      private set(value) {
         field = value
         setCaretColor(when (field) {
           JUMP     -> AceConfig.jumpModeColor

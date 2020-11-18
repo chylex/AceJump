@@ -201,6 +201,8 @@ object Finder : Resettable {
     return kept
   }
 
+  fun allResults() = results
+
   fun visibleResults() = results.filter { it in viewBounds }
 
   private fun String.isValidQuery() =
