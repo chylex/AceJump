@@ -1,14 +1,12 @@
 import org.jetbrains.changelog.closure
-import org.jetbrains.intellij.tasks.*
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.intellij.tasks.PatchPluginXmlTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   idea apply true
   kotlin("jvm") version "1.3.72"
-  id("org.jetbrains.intellij") version "0.6.4"
+  id("org.jetbrains.intellij") version "0.6.5"
   id("org.jetbrains.changelog") version "0.6.2"
-  id("com.github.ben-manes.versions") version "0.36.0"
 }
 
 tasks {
@@ -16,22 +14,7 @@ tasks {
     kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
     kotlinOptions.freeCompilerArgs += "-progressive"
   }
-
-  named<Zip>("buildPlugin") {
-    dependsOn("test")
-    archiveFileName.set("AceJump.zip")
-  }
-
-  withType<RunIdeTask> {
-    dependsOn("test")
-    findProperty("luginDev")?.let { args = listOf(projectDir.absolutePath) }
-  }
-
-  withType<PublishTask> {
-    val intellijPublishToken: String? by project
-    token(intellijPublishToken)
-  }
-
+  
   withType<PatchPluginXmlTask> {
     sinceBuild("201.6668.0")
     changeNotes({ changelog.getLatest().toHTML() })
@@ -44,10 +27,7 @@ changelog {
 }
 
 dependencies {
-  // gradle-intellij-plugin doesn't attach sources properly for Kotlin :(
   compileOnly(kotlin("stdlib-jdk8"))
-  // https://github.com/promeG/TinyPinyin
-  implementation("com.github.promeg:tinypinyin:2.0.3")
 }
 
 repositories {
@@ -62,5 +42,11 @@ intellij {
   setPlugins("java")
 }
 
+idea {
+  module {
+    excludeDirs.add(buildDir)
+  }
+}
+
 group = "org.acejump"
-version = "3.6.4"
+version = "4.0"
