@@ -42,11 +42,5 @@ intellij {
   setPlugins("java")
 }
 
-idea {
-  module {
-    excludeDirs.add(buildDir)
-  }
-}
-
 group = "org.acejump"
 version = "4.0"
