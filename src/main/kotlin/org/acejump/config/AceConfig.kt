@@ -19,14 +19,11 @@ class AceConfig : PersistentStateComponent<AceSettings> {
       get() = ServiceManager.getService(AceConfig::class.java).aceSettings
     
     val layout get() = settings.layout
-    val cycleModes get() = settings.let { arrayOf(it.cycleMode1, it.cycleMode2, it.cycleMode3, it.cycleMode4) }
     val jumpModeColor get() = settings.jumpModeColor
-    val jumpEndModeColor get() = settings.jumpEndModeColor
-    val targetModeColor get() = settings.targetModeColor
-    val definitionModeColor get() = settings.definitionModeColor
     val textHighlightColor get() = settings.textHighlightColor
     val tagForegroundColor get() = settings.tagForegroundColor
     val tagBackgroundColor get() = settings.tagBackgroundColor
+    val acceptedTagColor get() = settings.acceptedTagColor
     val roundedTagCorners get() = settings.roundedTagCorners
     val searchWholeFile get() = settings.searchWholeFile
   }

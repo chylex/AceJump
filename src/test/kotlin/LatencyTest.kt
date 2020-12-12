@@ -1,4 +1,4 @@
-import org.acejump.action.AceAction
+import org.acejump.action.AceKeyboardAction
 import org.acejump.test.util.BaseTest
 import org.junit.Ignore
 import java.io.File
@@ -15,7 +15,7 @@ class LatencyTest : BaseTest() {
       
       for (query in chars) {
         makeEditor(editorText)
-        myFixture.testAction(AceAction.ActivateOrCycleMode)
+        myFixture.testAction(AceKeyboardAction.ActivateAceJump)
         time += measureTimeMillis { typeAndWaitForResults("$query") }
         // TODO assert(Tagger.markers.isNotEmpty()) { "Should be tagged: $query" }
         resetEditor()

@@ -9,22 +9,22 @@ import kotlin.math.abs
 /**
  * Enables navigation between currently active tags.
  */
-internal class TagVisitor(private val editor: Editor, private val searchProcessor: SearchProcessor, private val tagJumper: TagJumper) {
+internal class TagVisitor(private val editor: Editor, private val searchProcessor: SearchProcessor) {
   /**
-   * Places caret at the closest tag following the caret position, according to the rules of the current jump mode (see [TagJumper.visit]).
+   * Places caret at the closest tag following the caret position.
    * If the caret is at or past the last tag, it moves to the first tag instead.
-   * If there is only one tag, it immediately performs the jump action as described in [TagJumper.jump].
+   * If there is only one tag, it returns its offset.
    */
-  fun visitNext(): Boolean {
+  fun visitNext(): Int? {
     return visit(SelectionModel::getSelectionEnd) { if (it < 0) -it - 1 else it + 1 }
   }
   
   /**
-   * Places caret at the closest tag preceding the caret position, according to the rules of the current jump mode (see [TagJumper.visit]).
+   * Places caret at the closest tag preceding the caret position.
    * If the caret is at or before the first tag, it moves to the last tag instead.
-   * If there is only one tag, it immediately performs the jump action as described in [TagJumper.jump].
+   * If there is only one tag, it returns its offset.
    */
-  fun visitPrevious(): Boolean {
+  fun visitPrevious(): Int? {
     return visit(SelectionModel::getSelectionStart) { if (it < 0) -it - 2 else it - 1 }
   }
   
@@ -48,8 +48,8 @@ internal class TagVisitor(private val editor: Editor, private val searchProcesso
     }
   }
   
-  private inline fun visit(caretPosition: SelectionModel.() -> Int, indexModifier: (Int) -> Int): Boolean {
-    val results = searchProcessor.results.takeUnless { it.isEmpty } ?: return false
+  private inline fun visit(caretPosition: SelectionModel.() -> Int, indexModifier: (Int) -> Int): Int? {
+    val results = searchProcessor.results.takeUnless { it.isEmpty } ?: return null
     val nextIndex = indexModifier(results.binarySearch(caretPosition(editor.selectionModel)))
     
     val targetOffset = results.getInt(when {
@@ -58,16 +58,8 @@ internal class TagVisitor(private val editor: Editor, private val searchProcesso
       else                          -> nextIndex
     })
     
-    val onlyResult = results.size == 1
-    
-    if (onlyResult) {
-      tagJumper.jump(targetOffset, shiftMode = false)
-    }
-    else {
-      tagJumper.visit(targetOffset)
-    }
-    
+    AceTagAction.JumpToSearchStart(editor, searchProcessor, targetOffset, shiftMode = false)
     editor.scrollingModel.scrollToCaret(ScrollType.RELATIVE)
-    return onlyResult
+    return targetOffset.takeIf { results.size == 1 }
   }
 }
