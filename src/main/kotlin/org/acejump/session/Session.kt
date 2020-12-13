@@ -7,6 +7,8 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.editor.actionSystem.TypedActionHandler
+import com.intellij.openapi.editor.colors.EditorColors
+import com.intellij.openapi.editor.colors.impl.AbstractColorsScheme
 import com.intellij.ui.LightweightHint
 import org.acejump.ExternalUsage
 import org.acejump.action.TagVisitor
@@ -16,8 +18,11 @@ import org.acejump.boundaries.StandardBoundaries
 import org.acejump.config.AceConfig
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
-import org.acejump.input.TagActionKeys
 import org.acejump.search.*
+import org.acejump.session.mode.SingleCaretSessionMode
+import org.acejump.session.mode.TypeResult
+import org.acejump.session.mode.VisitDirection
+import org.acejump.session.mode.VisitResult
 import org.acejump.view.TagCanvas
 import org.acejump.view.TextHighlighter
 
@@ -31,10 +36,11 @@ class Session(private val editor: Editor) {
   }
   
   private val editorSettings = EditorSettings.setup(editor)
-  private var activated = false
+  private lateinit var mode: SessionMode
   
   private var searchProcessor: SearchProcessor? = null
   private var tagger = Tagger(editor)
+  
   private var acceptedTag: Int? = null
     set(value) {
       field = value
@@ -48,7 +54,7 @@ class Session(private val editor: Editor) {
         if (processor != null) {
           textHighlighter.renderFinal(value, processor.query)
           
-          val hintText = TagActionKeys.hint
+          val hintText = mode.actionHint
             .joinToString("\n")
             .replace("<f>", "<span style=\"font-family:'${editor.colorsScheme.editorFontName}';font-weight:bold\">")
             .replace("</f>", "</span>")
@@ -83,17 +89,11 @@ class Session(private val editor: Editor) {
           processor = SearchProcessor.fromChar(editor, charTyped, defaultBoundaries).also { searchProcessor = it }
           updateSearch(processor)
         }
-        else {
-          val tag = acceptedTag
-          
-          if (tag != null) {
-            val action = TagActionKeys[charTyped] ?: return
-            action(editor, processor, tag, charTyped.isUpperCase())
-            end()
-          }
-          else if (processor.type(charTyped, tagger)) {
-            updateSearch(processor)
-          }
+        else when (val result = mode.type(editor, processor, tagger, charTyped, acceptedTag)) {
+          TypeResult.UpdateResults   -> updateSearch(processor)
+          TypeResult.EndSession      -> end()
+          is TypeResult.LoadSnapshot -> loadSnapshot(result.snapshot)
+          else                       -> return
         }
       }
     })
@@ -128,14 +128,28 @@ class Session(private val editor: Editor) {
   }
   
   /**
-   * Starts or ends AceJump mode.
+   * Loads state from a saved snapshot.
    */
-  fun startOrEnd() {
-    if (activated) {
-      end()
+  private fun loadSnapshot(snapshot: SessionSnapshot) {
+    acceptedTag = null
+    tagger = snapshot.savedTagger
+    searchProcessor = snapshot.savedProcessor?.also(::updateSearch)
+  }
+  
+  /**
+   * Sets AceJump mode or ends the session if the mode is the same.
+   */
+  fun setMode(mode: SessionMode) {
+    if (!this::mode.isInitialized) {
+      this.mode = mode
+      editor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
+    }
+    else if (!this.mode.isSame(mode)) {
+      this.mode = mode
+      restart()
     }
     else {
-      activated = true
+      end()
     }
   }
   
@@ -143,7 +157,7 @@ class Session(private val editor: Editor) {
    * Starts a regular expression search. If a search was already active, it will be reset alongside its tags and highlights.
    */
   fun startRegexSearch(pattern: String, boundaries: Boundaries) {
-    activated = true
+    setMode(SingleCaretSessionMode())
     tagger = Tagger(editor)
     tagCanvas.setMarkers(emptyList(), isRegex = true)
     updateSearch(SearchProcessor.fromRegex(editor, pattern, boundaries.intersection(defaultBoundaries)).also { searchProcessor = it })
@@ -157,17 +171,16 @@ class Session(private val editor: Editor) {
   }
   
   /**
-   * See [TagVisitor.visitPrevious]. If there are no tags, nothing happens.
+   * See [TagVisitor] for common behavior, but [SessionMode]s may override the behavior in certain or all situations.
    */
-  fun visitPreviousTag() {
-    tagVisitor?.visitPrevious()?.let { acceptedTag = it }
-  }
-  
-  /**
-   * See [TagVisitor.visitNext]. If there are no tags, nothing happens.
-   */
-  fun visitNextTag() {
-    tagVisitor?.visitNext()?.let { acceptedTag = it }
+  fun selectTag(direction: VisitDirection) {
+    val processor = searchProcessor ?: return
+    
+    when (val result = mode.visit(editor, processor, direction, acceptedTag)) {
+      VisitResult.EndSession        -> end()
+      is VisitResult.SetAcceptedTag -> acceptedTag = result.offset
+      else                          -> return
+    }
   }
   
   /**
@@ -186,8 +199,11 @@ class Session(private val editor: Editor) {
     searchProcessor = null
     tagCanvas.removeMarkers()
     textHighlighter.reset()
-    editorSettings.onTagUnaccepted(editor)
+    
     HintManagerImpl.getInstanceImpl().hideAllHints()
+    editorSettings.onTagUnaccepted(editor)
+    editor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
+    editor.contentComponent.repaint()
   }
   
   /**
@@ -202,6 +218,7 @@ class Session(private val editor: Editor) {
     if (!editor.isDisposed) {
       HintManagerImpl.getInstanceImpl().hideAllHints()
       editorSettings.restore(editor)
+      editor.colorsScheme.setColor(EditorColors.CARET_COLOR, AbstractColorsScheme.INHERITED_COLOR_MARKER)
       editor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
     }
   }

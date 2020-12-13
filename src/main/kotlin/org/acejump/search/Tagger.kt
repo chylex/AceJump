@@ -19,17 +19,17 @@ import kotlin.collections.component2
 /**
  * Assigns tags to search occurrences, updates them when the search query changes, and requests a jump if the search query matches a tag.
  */
-internal class Tagger(private val editor: Editor) {
+class Tagger(private val editor: Editor) {
   private var tagMap = HashBiMap.create<String, Int>()
   
   @ExternalUsage
-  val tags
+  internal val tags
     get() = tagMap.map { SimpleImmutableEntry(it.key, it.value) }.sortedBy { it.value }
     
   /**
    * Removes all markers, allowing them to be regenerated from scratch.
    */
-  fun unmark() {
+  internal fun unmark() {
     tagMap = HashBiMap.create()
   }
   
@@ -40,7 +40,7 @@ internal class Tagger(private val editor: Editor) {
    *
    * Note that the [results] collection will be mutated.
    */
-  fun update(query: SearchQuery, results: IntList): TaggingResult {
+  internal fun update(query: SearchQuery, results: IntList): TaggingResult {
     val isRegex = query is SearchQuery.RegularExpression
     val queryText = if (isRegex) " ${query.rawText}" else query.rawText[0] + query.rawText.drop(1).toLowerCase()
     
@@ -63,6 +63,10 @@ internal class Tagger(private val editor: Editor) {
     }
     
     return TaggingResult.Mark(createTagMarkers(results, query.rawText.ifEmpty { null }))
+  }
+  
+  fun clone(): Tagger {
+    return Tagger(editor).also { it.tagMap.putAll(tagMap) }
   }
   
   /**

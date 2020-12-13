@@ -19,7 +19,8 @@ class AceConfig : PersistentStateComponent<AceSettings> {
       get() = ServiceManager.getService(AceConfig::class.java).aceSettings
     
     val layout get() = settings.layout
-    val jumpModeColor get() = settings.jumpModeColor
+    val singleCaretModeColor get() = settings.singleCaretModeColor
+    val multiCaretModeColor get() = settings.multiCaretModeColor
     val textHighlightColor get() = settings.textHighlightColor
     val tagForegroundColor get() = settings.tagForegroundColor
     val tagBackgroundColor get() = settings.tagBackgroundColor

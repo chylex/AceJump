@@ -25,7 +25,7 @@ internal sealed class SearchQuery {
    * Each occurrence must either match the entire query, or match the query up to a point so that the rest of the query matches the
    * beginning of a tag at the location of the occurrence.
    */
-  class Literal(override var rawText: String) : SearchQuery() {
+  class Literal(override val rawText: String) : SearchQuery() {
     init {
       require(rawText.isNotEmpty())
     }
@@ -48,7 +48,7 @@ internal sealed class SearchQuery {
   /**
    * Searches for all matches of a regular expression.
    */
-  class RegularExpression(private var pattern: String) : SearchQuery() {
+  class RegularExpression(private val pattern: String) : SearchQuery() {
     override val rawText = ""
   
     override fun getHighlightLength(text: CharSequence, offset: Int): Int {

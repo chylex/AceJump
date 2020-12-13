@@ -47,6 +47,13 @@
       <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl SEMICOLON"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl SEMICOLON"/>
     </action>
+    <action id="AceActionMultiCaret"
+            class="org.acejump.action.AceKeyboardAction$ActivateAceJumpMultiCaret"
+            text="Activate AceJump in Multi-Caret Mode">
+      <keyboard-shortcut keymap="Mac OS X" first-keystroke="ctrl alt SEMICOLON"/>
+      <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl alt SEMICOLON"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SEMICOLON"/>
+    </action>
     <action id="AceLineAction"
             class="org.acejump.action.AceKeyboardAction$StartAllLineMarksMode"
             text="Start AceJump in All Line Marks Mode">

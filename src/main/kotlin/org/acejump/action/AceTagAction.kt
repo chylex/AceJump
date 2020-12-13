@@ -232,22 +232,4 @@ internal sealed class AceTagAction {
       ActionManager.getInstance().tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
     }
   }
-  
-  /**
-   * On default action, adds a caret at the end of the search query.
-   * On shift action, removes a caret from the end of the search query.
-   */
-  object AddRemoveCaret : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      val caretModel = editor.caretModel
-      val realOffset = JumpToSearchEnd.getCaretOffset(editor, searchProcessor, offset)
-      
-      if (shiftMode) {
-        caretModel.getCaretAt(editor.offsetToVisualPosition(realOffset))?.let(caretModel::removeCaret)
-      }
-      else {
-        caretModel.addCaret(editor.offsetToVisualPosition(realOffset))
-      }
-    }
-  }
 }

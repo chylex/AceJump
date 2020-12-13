@@ -8,6 +8,7 @@ import org.acejump.boundaries.StandardBoundaries
 import org.acejump.search.Pattern
 import org.acejump.session.Session
 import org.acejump.session.SessionManager
+import org.acejump.session.mode.VisitDirection
 
 /**
  * Base class for keyboard-activated overrides of existing editor actions, that have a different meaning during an AceJump [Session].
@@ -41,11 +42,11 @@ sealed class AceEditorAction(private val originalHandler: EditorActionHandler) :
   }
   
   class SelectBackward(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.visitPreviousTag()
+    override fun run(session: Session) = session.selectTag(VisitDirection.BACKWARD)
   }
   
   class SelectForward(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.visitNextTag()
+    override fun run(session: Session) = session.selectTag(VisitDirection.FORWARD)
   }
   
   class SearchLineStarts(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
