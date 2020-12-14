@@ -28,11 +28,20 @@ internal sealed class AceTagAction {
   abstract class BaseJumpAction : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       val oldOffset = editor.caretModel.offset
+      val oldSelection = editor.selectionModel.takeIf { it.hasSelection(false) }?.let { it.selectionStart..it.selectionEnd }
+      
       recordCaretPosition(editor)
       moveCaretTo(editor, getCaretOffset(editor, searchProcessor, offset))
       
       if (shiftMode) {
-        selectRange(editor, oldOffset, editor.caretModel.offset)
+        val newOffset = editor.caretModel.offset
+        
+        if (oldSelection == null) {
+          selectRange(editor, oldOffset, newOffset)
+        }
+        else {
+          selectRange(editor, minOf(oldOffset, newOffset, oldSelection.first), maxOf(oldOffset, newOffset, oldSelection.last), newOffset)
+        }
       }
     }
     
@@ -66,10 +75,10 @@ internal sealed class AceTagAction {
       caretModel.moveToOffset(offset)
     }
     
-    fun selectRange(editor: Editor, fromOffset: Int, toOffset: Int) = with(editor) {
+    fun selectRange(editor: Editor, fromOffset: Int, toOffset: Int, cursorOffset: Int = toOffset) = with(editor) {
       selectionModel.removeSelection(true)
       selectionModel.setSelection(fromOffset, toOffset)
-      caretModel.moveToOffset(toOffset)
+      caretModel.moveToOffset(cursorOffset)
     }
   
     fun performAction(action: AnAction) {
