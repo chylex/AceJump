@@ -15,6 +15,7 @@ import com.intellij.openapi.editor.actionSystem.DocCommandGroupId
 import com.intellij.openapi.fileEditor.ex.IdeDocumentHistory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.playback.commands.ActionCommand
+import com.intellij.refactoring.actions.RefactoringQuickListPopupAction
 import org.acejump.*
 import org.acejump.search.SearchProcessor
 import kotlin.math.max
@@ -239,6 +240,13 @@ internal sealed class AceTagAction {
     
     private fun performAction(action: AnAction) {
       ActionManager.getInstance().tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
+    }
+  }
+  
+  object Refactor : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+      performAction(RefactoringQuickListPopupAction())
     }
   }
 }
