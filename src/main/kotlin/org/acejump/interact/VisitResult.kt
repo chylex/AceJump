@@ -1,4 +1,4 @@
-package org.acejump.session.mode
+package org.acejump.interact
 
 sealed class VisitResult {
   object Nothing : VisitResult()

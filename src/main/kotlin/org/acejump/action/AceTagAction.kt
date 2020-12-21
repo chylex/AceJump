@@ -7,8 +7,10 @@ import com.intellij.find.actions.FindUsagesAction
 import com.intellij.find.actions.ShowUsagesAction
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.UndoConfirmationPolicy
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.DocCommandGroupId
@@ -193,6 +195,89 @@ internal sealed class AceTagAction {
       }
       
       selectRange(editor, finalStartOffset, finalEndOffset)
+    }
+  }
+  
+  object SelectQuery : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      recordCaretPosition(editor)
+      
+      val startOffset = JumpToSearchStart.getCaretOffset(editor, searchProcessor, offset)
+      val endOffset = JumpPastSearchEnd.getCaretOffset(editor, searchProcessor, offset)
+      
+      selectRange(editor, startOffset, endOffset)
+    }
+  }
+  
+  object SelectWord : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      val chars = editor.immutableText
+      val queryEndOffset = JumpToSearchEnd.getCaretOffset(editor, searchProcessor, offset)
+  
+      if (chars[queryEndOffset].isWordPart) {
+        recordCaretPosition(editor)
+        
+        val startOffset = JumpToWordStartTag.getCaretOffset(editor, offset, queryEndOffset, isInsideWord = true)
+        val endOffset = JumpToWordEndTag.getCaretOffset(editor, offset, queryEndOffset, isInsideWord = true)
+        
+        selectRange(editor, startOffset, endOffset)
+      }
+      else {
+        SelectQuery(editor, searchProcessor, offset, shiftMode)
+      }
+    }
+  }
+  
+  object SelectHump : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      val chars = editor.immutableText
+      val queryEndOffset = JumpToSearchEnd.getCaretOffset(editor, searchProcessor, offset)
+  
+      if (chars[queryEndOffset].isWordPart) {
+        recordCaretPosition(editor)
+    
+        val startOffset = chars.humpStart(queryEndOffset)
+        val endOffset = chars.humpEnd(queryEndOffset) + 1
+    
+        selectRange(editor, startOffset, endOffset)
+      }
+      else {
+        SelectQuery(editor, searchProcessor, offset, shiftMode)
+      }
+    }
+  }
+  
+  object SelectLine : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+      editor.selectionModel.selectLineAtCaret()
+    }
+  }
+  
+  class SelectExtended(private val extendCount: Int) : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+      
+      val action = ActionManager.getInstance().getAction(IdeActions.ACTION_EDITOR_SELECT_WORD_AT_CARET)
+      
+      repeat(extendCount) {
+        performAction(action)
+      }
+    }
+  }
+  
+  class Delete(private val selector: AceTagAction) : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      val oldCarets = editor.caretModel.caretsAndSelections
+      
+      selector(editor, searchProcessor, offset, shiftMode)
+      WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Delete").run<Throwable> {
+        editor.selectionModel.let { editor.document.deleteString(it.selectionStart, it.selectionEnd) }
+      }
+  
+      if (shiftMode) {
+        editor.caretModel.caretsAndSelections = oldCarets
+      }
     }
   }
   

@@ -5,10 +5,10 @@ import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 import org.acejump.boundaries.StandardBoundaries
+import org.acejump.interact.VisitDirection
 import org.acejump.search.Pattern
 import org.acejump.session.Session
 import org.acejump.session.SessionManager
-import org.acejump.session.mode.VisitDirection
 
 /**
  * Base class for keyboard-activated overrides of existing editor actions, that have a different meaning during an AceJump [Session].

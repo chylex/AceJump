@@ -18,11 +18,11 @@ import org.acejump.boundaries.StandardBoundaries
 import org.acejump.config.AceConfig
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
+import org.acejump.interact.TypeResult
+import org.acejump.interact.VisitDirection
+import org.acejump.interact.VisitResult
+import org.acejump.interact.mode.DefaultMode
 import org.acejump.search.*
-import org.acejump.session.mode.SingleCaretSessionMode
-import org.acejump.session.mode.TypeResult
-import org.acejump.session.mode.VisitDirection
-import org.acejump.session.mode.VisitResult
 import org.acejump.view.TagCanvas
 import org.acejump.view.TextHighlighter
 
@@ -53,17 +53,7 @@ class Session(private val editor: Editor) {
         
         if (processor != null) {
           textHighlighter.renderFinal(value, processor.query)
-          
-          val hintText = mode.actionHint
-            .joinToString("\n")
-            .replace("<f>", "<span style=\"font-family:'${editor.colorsScheme.editorFontName}';font-weight:bold\">")
-            .replace("</f>", "</span>")
-          
-          val hint = LightweightHint(HintUtil.createInformationLabel(hintText))
-          val pos = HintManagerImpl.getHintPosition(hint, editor, editor.offsetToLogicalPosition(value), HintManager.ABOVE)
-          val info = HintManagerImpl.createHintHint(editor, pos, hint, HintManager.ABOVE).setShowImmediately(true)
-          val flags = HintManager.UPDATE_BY_SCROLLING or HintManager.HIDE_BY_ESCAPE
-          HintManagerImpl.getInstanceImpl().showEditorHint(hint, editor, pos, flags, 0, true, info)
+          setMode(DefaultMode)
         }
       }
     }
@@ -88,11 +78,18 @@ class Session(private val editor: Editor) {
         if (processor == null) {
           processor = SearchProcessor.fromChar(editor, charTyped, defaultBoundaries).also { searchProcessor = it }
           updateSearch(processor)
+          return
         }
-        else when (val result = mode.type(editor, processor, tagger, charTyped, acceptedTag)) {
+        
+        editorSettings.startEditing(editor)
+        val result = mode.type(editor, processor, tagger, charTyped, acceptedTag)
+        editorSettings.stopEditing(editor)
+        
+        when (result) {
           TypeResult.UpdateResults   -> updateSearch(processor)
           TypeResult.EndSession      -> end()
           is TypeResult.LoadSnapshot -> loadSnapshot(result.snapshot)
+          is TypeResult.ChangeMode   -> setMode(result.mode)
           else                       -> return
         }
       }
@@ -136,13 +133,31 @@ class Session(private val editor: Editor) {
     searchProcessor = snapshot.savedProcessor?.also(::updateSearch)
   }
   
+  private fun setMode(mode: SessionMode) {
+    this.mode = mode
+    editor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
+    
+    val acceptedTag = acceptedTag
+    if (acceptedTag != null) {
+      val hintText = mode.actionHint
+        .joinToString("\n")
+        .replace("<f>", "<span style=\"font-family:'${editor.colorsScheme.editorFontName}';font-weight:bold\">")
+        .replace("</f>", "</span>")
+  
+      val hint = LightweightHint(HintUtil.createInformationLabel(hintText))
+      val pos = HintManagerImpl.getHintPosition(hint, editor, editor.offsetToLogicalPosition(acceptedTag), HintManager.ABOVE)
+      val info = HintManagerImpl.createHintHint(editor, pos, hint, HintManager.ABOVE).setShowImmediately(true)
+      val flags = HintManager.UPDATE_BY_SCROLLING or HintManager.HIDE_BY_ESCAPE
+      HintManagerImpl.getInstanceImpl().showEditorHint(hint, editor, pos, flags, 0, true, info)
+    }
+  }
+  
   /**
    * Sets AceJump mode or ends the session if the mode is the same.
    */
-  fun setMode(mode: SessionMode) {
+  fun toggleMode(mode: SessionMode) {
     if (!this::mode.isInitialized) {
-      this.mode = mode
-      editor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
+      setMode(mode)
     }
     else if (!this.mode.isSame(mode)) {
       this.mode = mode
@@ -157,7 +172,7 @@ class Session(private val editor: Editor) {
    * Starts a regular expression search. If a search was already active, it will be reset alongside its tags and highlights.
    */
   fun startRegexSearch(pattern: String, boundaries: Boundaries) {
-    setMode(SingleCaretSessionMode())
+    toggleMode(DefaultMode)
     tagger = Tagger(editor)
     tagCanvas.setMarkers(emptyList(), isRegex = true)
     updateSearch(SearchProcessor.fromRegex(editor, pattern, boundaries.intersection(defaultBoundaries)).also { searchProcessor = it })

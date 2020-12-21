@@ -1,4 +1,4 @@
-package org.acejump.session.mode
+package org.acejump.interact
 
 enum class VisitDirection {
   BACKWARD,

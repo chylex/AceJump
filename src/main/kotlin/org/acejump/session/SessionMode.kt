@@ -1,11 +1,11 @@
 package org.acejump.session
 
 import com.intellij.openapi.editor.Editor
+import org.acejump.interact.TypeResult
+import org.acejump.interact.VisitDirection
+import org.acejump.interact.VisitResult
 import org.acejump.search.SearchProcessor
 import org.acejump.search.Tagger
-import org.acejump.session.mode.TypeResult
-import org.acejump.session.mode.VisitDirection
-import org.acejump.session.mode.VisitResult
 import java.awt.Color
 
 interface SessionMode {

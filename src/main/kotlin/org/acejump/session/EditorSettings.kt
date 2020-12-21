@@ -26,6 +26,14 @@ internal data class EditorSettings(private val isBlockCursor: Boolean, private v
     }
   }
   
+  fun startEditing(editor: Editor) {
+    editor.document.setReadOnly(isReadOnly)
+  }
+  
+  fun stopEditing(editor: Editor) {
+    editor.document.setReadOnly(true)
+  }
+  
   fun onTagAccepted(editor: Editor) = editor.let {
     it.settings.isBlockCursor = isBlockCursor
   }
