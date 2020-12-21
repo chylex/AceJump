@@ -322,10 +322,6 @@ internal sealed class AceTagAction {
         editor.caretModel.caretsAndSelections = oldCarets
       }
     }
-    
-    private fun performAction(action: AnAction) {
-      ActionManager.getInstance().tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
-    }
   }
   
   object Refactor : AceTagAction() {
