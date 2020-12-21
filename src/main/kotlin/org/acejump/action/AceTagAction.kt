@@ -5,6 +5,8 @@ import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction
 import com.intellij.codeInsight.navigation.actions.GotoTypeDeclarationAction
 import com.intellij.find.actions.FindUsagesAction
 import com.intellij.find.actions.ShowUsagesAction
+import com.intellij.ide.actions.CopyAction
+import com.intellij.ide.actions.PasteAction
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.IdeActions
@@ -61,6 +63,20 @@ internal sealed class AceTagAction {
     }
     
     abstract fun getCaretOffset(editor: Editor, queryStartOffset: Int, queryEndOffset: Int, isInsideWord: Boolean): Int
+  }
+  
+  abstract class BaseShiftRestoresCaretsAction : AceTagAction() {
+    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      val oldCarets = editor.caretModel.caretsAndSelections
+      
+      invoke(editor, searchProcessor, offset)
+      
+      if (shiftMode) {
+        editor.caretModel.caretsAndSelections = oldCarets
+      }
+    }
+    
+    protected abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int)
   }
   
   private companion object {
@@ -266,17 +282,25 @@ internal sealed class AceTagAction {
     }
   }
   
-  class Delete(private val selector: AceTagAction) : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      val oldCarets = editor.caretModel.caretsAndSelections
-      
-      selector(editor, searchProcessor, offset, shiftMode)
+  class Copy(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+      selector(editor, searchProcessor, offset, shiftMode = false)
+      performAction(CopyAction())
+    }
+  }
+  
+  class Paste(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+      selector(editor, searchProcessor, offset, shiftMode = false)
+      performAction(PasteAction())
+    }
+  }
+  
+  class Delete(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+      selector(editor, searchProcessor, offset, shiftMode = false)
       WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Delete").run<Throwable> {
         editor.selectionModel.let { editor.document.deleteString(it.selectionStart, it.selectionEnd) }
-      }
-  
-      if (shiftMode) {
-        editor.caretModel.caretsAndSelections = oldCarets
       }
     }
   }
@@ -311,16 +335,10 @@ internal sealed class AceTagAction {
    *
    * On shift action, does the above but without changing the caret position.
    */
-  object ShowIntentions : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      val oldCarets = editor.caretModel.caretsAndSelections
-      
+  object ShowIntentions : BaseShiftRestoresCaretsAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
       JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
       performAction(ShowIntentionActionsAction())
-      
-      if (shiftMode) {
-        editor.caretModel.caretsAndSelections = oldCarets
-      }
     }
   }
   

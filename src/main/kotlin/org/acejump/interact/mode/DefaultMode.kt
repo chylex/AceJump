@@ -18,6 +18,9 @@ internal object DefaultMode : AbstractNavigableMode() {
   
   override val modeMap = mapOf(
     'S' to { SelectMode },
+    'C' to { CopyMode },
+    'P' to { PasteAtMode },
+    'O' to { PasteOverMode },
     'D' to { DeleteMode }
   )
   
@@ -28,6 +31,7 @@ internal object DefaultMode : AbstractNavigableMode() {
     "<f>[J]</f>ump to Tag / <f>[K]</f> to Query / <f>[L]</f> past Query",
     "<f>[W]</f>ord Start / Word <f>[E]</f>nd",
     "<f>[S]</f>elect... / <f>[D]</f>elete...",
+    "<f>[C]</f>opy... / <f>[P]</f>aste... / Paste <f>[O]</f>ver...",
     "<f>[B]</f> Declaration / <f>[U]</f>sages / <f>[I]</f>ntentions / <f>[R]</f>efactor"
   )
 }
