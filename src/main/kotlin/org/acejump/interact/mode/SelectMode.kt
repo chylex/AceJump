@@ -23,6 +23,6 @@ internal object SelectMode : AbstractNavigableMode() {
     "<f>[Q]</f>uery / <f>[L]</f>ine",
     "<f>[W]</f>ord / <f>[H]</f>ump",
     "<f>[C]</f>aret to...",
-    "<f>[1-9] Extend Selection</f>"
+    "<f>[1-9]</f> Extend Selection"
   )
 }
