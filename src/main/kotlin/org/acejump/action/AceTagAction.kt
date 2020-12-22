@@ -6,6 +6,7 @@ import com.intellij.codeInsight.navigation.actions.GotoTypeDeclarationAction
 import com.intellij.find.actions.FindUsagesAction
 import com.intellij.find.actions.ShowUsagesAction
 import com.intellij.ide.actions.CopyAction
+import com.intellij.ide.actions.CutAction
 import com.intellij.ide.actions.PasteAction
 import com.intellij.openapi.actionSystem.ActionManager
 import com.intellij.openapi.actionSystem.AnAction
@@ -279,6 +280,13 @@ internal sealed class AceTagAction {
       repeat(extendCount) {
         performAction(action)
       }
+    }
+  }
+  
+  class Cut(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+      selector(editor, searchProcessor, offset, shiftMode = false)
+      performAction(CutAction())
     }
   }
   
