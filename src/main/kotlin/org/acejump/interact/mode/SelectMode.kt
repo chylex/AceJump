@@ -2,7 +2,6 @@ package org.acejump.interact.mode
 
 import org.acejump.action.AceTagAction
 import org.acejump.config.AceConfig
-import org.acejump.session.SessionMode
 
 internal object SelectMode : AbstractNavigableMode() {
   override val actionMap = mapOf(
@@ -13,8 +12,9 @@ internal object SelectMode : AbstractNavigableMode() {
     *('1'..'9').mapIndexed { index, char -> char to AceTagAction.SelectExtended(index + 1) }.toTypedArray()
   )
   
-  override val modeMap
-    get() = emptyMap<Char, () -> SessionMode>()
+  override val modeMap = mapOf(
+    'C' to { SelectToCaretMode { it } }
+  )
   
   override val caretColor
     get() = AceConfig.singleCaretModeColor
@@ -22,6 +22,7 @@ internal object SelectMode : AbstractNavigableMode() {
   override val actionHint = arrayOf(
     "<f>[Q]</f>uery / <f>[L]</f>ine",
     "<f>[W]</f>ord / <f>[H]</f>ump",
+    "<f>[C]</f>aret to...",
     "<f>[1-9] Extend Selection</f>"
   )
 }

@@ -283,6 +283,12 @@ internal sealed class AceTagAction {
     }
   }
   
+  class SelectToCaret(private val jumper: BaseJumpAction) : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      jumper(editor, searchProcessor, offset, shiftMode = true)
+    }
+  }
+  
   class Cut(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
       selector(editor, searchProcessor, offset, shiftMode = false)
