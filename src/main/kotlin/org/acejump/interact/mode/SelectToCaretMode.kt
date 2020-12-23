@@ -28,6 +28,6 @@ internal class SelectToCaretMode(private val wrapper: (AceTagAction) -> AceTagAc
     )
   
   fun wrap(wrapper: (AceTagAction) -> AceTagAction): SelectToCaretMode {
-    return SelectToCaretMode { wrapper(it) }
+    return SelectToCaretMode { wrapper(this.wrapper(it)) }
   }
 }
