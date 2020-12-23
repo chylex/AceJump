@@ -18,7 +18,8 @@ internal class MultiCaretMode : SessionMode {
       'L' to AceTagAction.JumpPastSearchEnd,
       'W' to AceTagAction.JumpToWordStartTag,
       'E' to AceTagAction.JumpToWordEndTag,
-      'S' to AceTagAction.SelectWordOrHump
+      'S' to AceTagAction.SelectWord,
+      'H' to AceTagAction.SelectHump
     )
   }
   
@@ -27,7 +28,8 @@ internal class MultiCaretMode : SessionMode {
   
   override val actionHint = arrayOf(
     "<f>[J]</f>ump to Tag / <f>[K]</f> to Query / <f>[L]</f> past Query",
-    "<f>[W]</f>ord Start / Word <f>[E]</f>nd / <f>[S]</f>elect Word"
+    "<f>[W]</f>ord Start / Word <f>[E]</f>nd",
+    "<f>[S]</f>elect Word / Select <f>[H]</f>ump"
   )
   
   private var isFirst = true
