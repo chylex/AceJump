@@ -52,10 +52,9 @@ internal sealed class AceTagAction {
       if (shiftMode) {
         val caretModel = editor.caretModel
         val oldCarets = caretModel.caretsAndSelections
-        val oldOffsetPosition = caretModel.logicalPosition
         
         invoke(editor, searchProcessor, offset)
-        caretModel.caretsAndSelections = oldCarets.filter { it.caretPosition != oldOffsetPosition } + caretModel.caretsAndSelections
+        caretModel.caretsAndSelections = oldCarets + caretModel.caretsAndSelections
       }
       else {
         invoke(editor, searchProcessor, offset)
