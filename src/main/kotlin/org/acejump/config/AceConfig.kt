@@ -20,7 +20,6 @@ class AceConfig : PersistentStateComponent<AceSettings> {
     
     val layout get() = settings.layout
     val singleCaretModeColor get() = settings.singleCaretModeColor
-    val multiCaretModeColor get() = settings.multiCaretModeColor
     val textHighlightColor get() = settings.textHighlightColor
     val tagForegroundColor get() = settings.tagForegroundColor
     val tagBackgroundColor get() = settings.tagBackgroundColor

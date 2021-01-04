@@ -27,7 +27,6 @@ internal class AceSettingsPanel {
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val singleCaretModeColorWheel = ColorPanel()
-  private val multiCaretModeColorWheel = ColorPanel()
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
@@ -52,8 +51,7 @@ internal class AceSettingsPanel {
     }
     
     titledRow("Colors") {
-      row("Single-caret mode background:") { short(singleCaretModeColorWheel) }
-      row("Multi-caret mode background:") { short(multiCaretModeColorWheel) }
+      row("Caret background:") { short(singleCaretModeColorWheel) }
       row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
       row("Tag background:") { short(tagBackgroundColorWheel) }
@@ -74,7 +72,6 @@ internal class AceSettingsPanel {
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
   internal var singleCaretModeColor by singleCaretModeColorWheel
-  internal var multiCaretModeColor by multiCaretModeColorWheel
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
@@ -86,7 +83,6 @@ internal class AceSettingsPanel {
     allowedChars = settings.allowedChars
     keyboardLayout = settings.layout
     singleCaretModeColor = settings.singleCaretModeColor
-    multiCaretModeColor = settings.multiCaretModeColor
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor

@@ -12,9 +12,6 @@ data class AceSettings(
   @OptionTag("jumpModeRGB", converter = ColorConverter::class)
   var singleCaretModeColor: Color = Color.BLUE,
   
-  @OptionTag("multiCaretModeRGB", converter = ColorConverter::class)
-  var multiCaretModeColor: Color = Color.ORANGE,
-  
   @OptionTag("textHighlightRGB", converter = ColorConverter::class)
   var textHighlightColor: Color = Color.GREEN,
   
