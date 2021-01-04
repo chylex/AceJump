@@ -12,9 +12,7 @@ internal object SelectMode : AbstractNavigableMode() {
     *('1'..'9').mapIndexed { index, char -> char to AceTagAction.SelectExtended(index + 1) }.toTypedArray()
   )
   
-  override val modeMap = mapOf(
-    'C' to { SelectToCaretMode { it } }
-  )
+  override val modeMap = emptyMap<Char, () -> SelectToCaretMode>()
   
   override val caretColor
     get() = AceConfig.singleCaretModeColor
@@ -22,7 +20,6 @@ internal object SelectMode : AbstractNavigableMode() {
   override val actionHint = arrayOf(
     "<f>[Q]</f>uery / <f>[L]</f>ine",
     "<f>[W]</f>ord / <f>[H]</f>ump",
-    "<f>[C]</f>aret to...",
     "<f>[1-9]</f> Extend Selection"
   )
 }

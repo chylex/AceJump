@@ -17,12 +17,17 @@ internal object DefaultMode : AbstractNavigableMode() {
   )
   
   override val modeMap = mapOf(
-    'S' to { SelectMode },
-    'X' to { CutMode },
-    'C' to { CopyMode },
-    'P' to { PasteAtMode },
-    'O' to { PasteOverMode },
-    'D' to { DeleteMode }
+    's' to { SelectMode },
+    'S' to { SelectToCaretMode() },
+    'x' to { CutMode },
+    'X' to { SelectToCaretMode(CutMode::wrap) },
+    'c' to { CopyMode },
+    'C' to { SelectToCaretMode(CopyMode::wrap) },
+    'p' to { PasteAtMode },
+    'o' to { PasteOverMode },
+    'O' to { SelectToCaretMode(PasteOverMode::wrap) },
+    'd' to { DeleteMode },
+    'D' to { SelectToCaretMode(DeleteMode::wrap) }
   )
   
   override val caretColor

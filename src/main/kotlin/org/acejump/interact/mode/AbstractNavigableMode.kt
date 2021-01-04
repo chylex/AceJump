@@ -22,7 +22,7 @@ internal abstract class AbstractNavigableMode : SessionMode {
         return TypeResult.EndSession
       }
       
-      val mode = modeMap[charTyped.toUpperCase()]
+      val mode = modeMap[charTyped] ?: modeMap[charTyped.toLowerCase()]
       if (mode != null) {
         return TypeResult.ChangeMode(mode())
       }

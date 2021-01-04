@@ -4,7 +4,7 @@ import org.acejump.action.AceTagAction
 import org.acejump.config.AceConfig
 import org.acejump.session.SessionMode
 
-internal class SelectToCaretMode(private val wrapper: (AceTagAction) -> AceTagAction) : AbstractNavigableMode() {
+internal class SelectToCaretMode(private val wrapper: (AceTagAction) -> AceTagAction = { it }) : AbstractNavigableMode() {
   override val actionMap = mapOf(
     'J' to AceTagAction.JumpToSearchStart,
     'K' to AceTagAction.JumpToSearchEnd,

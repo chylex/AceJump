@@ -14,5 +14,5 @@ internal abstract class AbstractSelectionBasedMode : AbstractNavigableMode() {
   override val actionHint
     get() = SelectMode.actionHint
   
-  protected abstract fun wrap(action: AceTagAction): AceTagAction
+  abstract fun wrap(action: AceTagAction): AceTagAction
 }
