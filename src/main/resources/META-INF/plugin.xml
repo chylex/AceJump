@@ -23,10 +23,6 @@
                          implementationClass="org.acejump.action.AceEditorAction$Reset"/>
     <editorActionHandler action="EditorBackSpace" order="first"
                          implementationClass="org.acejump.action.AceEditorAction$ClearSearch"/>
-    <editorActionHandler action="EditorStartNewLine" order="first"
-                         implementationClass="org.acejump.action.AceEditorAction$SelectBackward"/>
-    <editorActionHandler action="EditorEnter" order="first"
-                         implementationClass="org.acejump.action.AceEditorAction$SelectForward"/>
     <editorActionHandler action="EditorUp" order="first"
                          implementationClass="org.acejump.action.AceEditorAction$SearchLineStarts"/>
     <editorActionHandler action="EditorLeft" order="first"
