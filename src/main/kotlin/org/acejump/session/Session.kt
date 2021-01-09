@@ -30,11 +30,6 @@ import org.acejump.view.TextHighlighter
  * Manages an AceJump session for a single [Editor].
  */
 class Session(private val editor: Editor) {
-  private companion object {
-    private val defaultBoundaries
-      get() = if (AceConfig.searchWholeFile) StandardBoundaries.WHOLE_FILE else StandardBoundaries.VISIBLE_ON_SCREEN
-  }
-  
   private val editorSettings = EditorSettings.setup(editor)
   private lateinit var mode: SessionMode
   
@@ -76,7 +71,7 @@ class Session(private val editor: Editor) {
         var processor = searchProcessor
         
         if (processor == null) {
-          processor = SearchProcessor.fromChar(editor, charTyped, defaultBoundaries).also { searchProcessor = it }
+          processor = SearchProcessor.fromChar(editor, charTyped, StandardBoundaries.VISIBLE_ON_SCREEN).also { searchProcessor = it }
           updateSearch(processor)
           return
         }
@@ -175,7 +170,7 @@ class Session(private val editor: Editor) {
     toggleMode(DefaultMode)
     tagger = Tagger(editor)
     tagCanvas.setMarkers(emptyList(), isRegex = true)
-    updateSearch(SearchProcessor.fromRegex(editor, pattern, boundaries.intersection(defaultBoundaries)).also { searchProcessor = it })
+    updateSearch(SearchProcessor.fromRegex(editor, pattern, boundaries).also { searchProcessor = it })
   }
   
   /**
