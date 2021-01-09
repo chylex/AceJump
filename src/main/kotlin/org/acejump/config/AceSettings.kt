@@ -15,6 +15,9 @@ data class AceSettings(
   @OptionTag("fromCaretModeRGB", converter = ColorConverter::class)
   var fromCaretModeColor: Color = Color.ORANGE,
   
+  @OptionTag("betweenPointsModeRGB", converter = ColorConverter::class)
+  var betweenPointsModeColor: Color = Color.YELLOW,
+  
   @OptionTag("textHighlightRGB", converter = ColorConverter::class)
   var textHighlightColor: Color = Color.GREEN,
   

@@ -16,6 +16,7 @@ class AceConfigurable : Configurable {
       panel.keyboardLayout != settings.layout ||
       panel.jumpModeColor != settings.jumpModeColor ||
       panel.fromCaretModeColor != settings.fromCaretModeColor ||
+      panel.betweenPointsModeColor != settings.betweenPointsModeColor ||
       panel.textHighlightColor != settings.textHighlightColor ||
       panel.tagForegroundColor != settings.tagForegroundColor ||
       panel.tagBackgroundColor != settings.tagBackgroundColor ||
@@ -27,6 +28,7 @@ class AceConfigurable : Configurable {
     settings.layout = panel.keyboardLayout
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
     panel.fromCaretModeColor?.let { settings.fromCaretModeColor = it }
+    panel.betweenPointsModeColor?.let { settings.betweenPointsModeColor = it }
     panel.textHighlightColor?.let { settings.textHighlightColor = it }
     panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
     panel.tagBackgroundColor?.let { settings.tagBackgroundColor = it }

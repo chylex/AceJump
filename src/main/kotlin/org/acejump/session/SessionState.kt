@@ -6,7 +6,7 @@ import org.acejump.boundaries.StandardBoundaries
 import org.acejump.search.SearchProcessor
 import org.acejump.search.Tagger
 
-class SessionState(private val editor: Editor, private val tagger: Tagger, processor: SearchProcessor? = null) {
+class SessionState(val editor: Editor, private val tagger: Tagger, processor: SearchProcessor? = null) {
   private var currentProcessor: SearchProcessor? = processor
   
   fun type(char: Char): TypeResult {

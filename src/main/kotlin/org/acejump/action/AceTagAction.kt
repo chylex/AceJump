@@ -285,6 +285,13 @@ sealed class AceTagAction {
     }
   }
   
+  class SelectBetweenPoints(private val firstOffset: Int, private val secondOffsetJumper: BaseJumpAction) : BaseSelectAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+      secondOffsetJumper(editor, searchProcessor, offset, shiftMode = false)
+      selectRange(editor, firstOffset, editor.caretModel.offset)
+    }
+  }
+  
   class Cut(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
       selector(editor, searchProcessor, offset, shiftMode = false)

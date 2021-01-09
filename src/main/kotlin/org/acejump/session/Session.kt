@@ -15,6 +15,7 @@ import org.acejump.boundaries.Boundaries
 import org.acejump.config.AceConfig
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
+import org.acejump.modes.BetweenPointsMode
 import org.acejump.modes.FromCaretMode
 import org.acejump.modes.JumpMode
 import org.acejump.search.*
@@ -61,6 +62,7 @@ class Session(private val editor: Editor) {
         
         when (result) {
           TypeResult.Nothing          -> updateHint()
+          TypeResult.RestartSearch    -> restart().also { this@Session.state = SessionState(editor, tagger); updateHint() }
           is TypeResult.UpdateResults -> updateSearch(result.processor)
           is TypeResult.ChangeMode    -> setMode(result.mode)
           TypeResult.EndSession       -> end()
@@ -126,8 +128,9 @@ class Session(private val editor: Editor) {
     
     restart()
     setMode(when (mode) {
-      is JumpMode -> FromCaretMode()
-      else        -> JumpMode()
+      is JumpMode      -> FromCaretMode()
+      is FromCaretMode -> BetweenPointsMode()
+      else             -> JumpMode()
     })
     
     state = SessionState(editor, tagger)
