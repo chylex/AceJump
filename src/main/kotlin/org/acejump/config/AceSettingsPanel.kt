@@ -8,7 +8,6 @@ import com.intellij.ui.layout.Cell
 import com.intellij.ui.layout.GrowPolicy.MEDIUM_TEXT
 import com.intellij.ui.layout.GrowPolicy.SHORT_TEXT
 import com.intellij.ui.layout.panel
-import org.acejump.input.JumpMode
 import org.acejump.input.KeyLayout
 import java.awt.Color
 import java.awt.Font
@@ -26,27 +25,19 @@ internal class AceSettingsPanel {
   private val tagCharsField = JBTextField()
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
-  private val cycleModeCombo1 = ComboBox<JumpMode>()
-  private val cycleModeCombo2 = ComboBox<JumpMode>()
-  private val cycleModeCombo3 = ComboBox<JumpMode>()
-  private val cycleModeCombo4 = ComboBox<JumpMode>()
   private val minQueryLengthField = JBTextField()
   private val jumpModeColorWheel = ColorPanel()
-  private val jumpEndModeColorWheel = ColorPanel()
-  private val targetModeColorWheel = ColorPanel()
-  private val definitionModeColorWheel = ColorPanel()
+  private val fromCaretModeColorWheel = ColorPanel()
+  private val betweenPointsModeColorWheel = ColorPanel()
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
+  private val acceptedTagColorWheel = ColorPanel()
   
   init {
     tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
     keyboardLayoutArea.apply { font = Font("monospaced", font.style, font.size) }
     keyboardLayoutCombo.setupEnumItems { keyChars = it.rows.joinToString("\n") }
-    cycleModeCombo1.setupEnumItems { cycleMode1 = it }
-    cycleModeCombo2.setupEnumItems { cycleMode2 = it }
-    cycleModeCombo3.setupEnumItems { cycleMode3 = it }
-    cycleModeCombo4.setupEnumItems { cycleMode4 = it }
   }
   
   internal val rootPanel: JPanel = panel {
@@ -59,29 +50,18 @@ internal class AceSettingsPanel {
       row("Keyboard design:") { short(keyboardLayoutArea) }
     }
     
-    titledRow("Modes") {
-      row("Cycle order:") {
-        cell(isVerticalFlow = false, isFullWidth = false) {
-          cycleModeCombo1()
-          cycleModeCombo2()
-          cycleModeCombo3()
-          cycleModeCombo4()
-        }
-      }
-    }
-    
     titledRow("Behavior") {
       row("Minimum typed characters (1-10):") { short(minQueryLengthField) }
     }
     
     titledRow("Colors") {
       row("Jump mode caret background:") { short(jumpModeColorWheel) }
-      row("Jump to End mode caret background:") { short(jumpEndModeColorWheel) }
-      row("Target mode caret background:") { short(targetModeColorWheel) }
-      row("Definition mode caret background:") { short(definitionModeColorWheel) }
+      row("From Caret mode caret background:") { short(fromCaretModeColorWheel) }
+      row("Between Points mode caret background:") { short(betweenPointsModeColorWheel) }
       row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
       row("Tag background:") { short(tagBackgroundColorWheel) }
+      row("Accepted tag position background:") { short(acceptedTagColorWheel) }
     }
   }
   
@@ -89,18 +69,14 @@ internal class AceSettingsPanel {
   internal var allowedChars by tagCharsField
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
-  internal var cycleMode1 by cycleModeCombo1
-  internal var cycleMode2 by cycleModeCombo2
-  internal var cycleMode3 by cycleModeCombo3
-  internal var cycleMode4 by cycleModeCombo4
   internal var minQueryLength by minQueryLengthField
   internal var jumpModeColor by jumpModeColorWheel
-  internal var jumpEndModeColor by jumpEndModeColorWheel
-  internal var targetModeColor by targetModeColorWheel
-  internal var definitionModeColor by definitionModeColorWheel
+  internal var fromCaretModeColor by fromCaretModeColorWheel
+  internal var betweenPointsModeColor by betweenPointsModeColorWheel
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
+  internal var acceptedTagColor by acceptedTagColorWheel
   
   internal var minQueryLengthInt
     get() = minQueryLength.toIntOrNull()?.coerceIn(1, 10)
@@ -109,18 +85,14 @@ internal class AceSettingsPanel {
   fun reset(settings: AceSettings) {
     allowedChars = settings.allowedChars
     keyboardLayout = settings.layout
-    cycleMode1 = settings.cycleMode1
-    cycleMode2 = settings.cycleMode2
-    cycleMode3 = settings.cycleMode3
-    cycleMode4 = settings.cycleMode4
     minQueryLength = settings.minQueryLength.toString()
     jumpModeColor = settings.jumpModeColor
-    jumpEndModeColor = settings.jumpEndModeColor
-    targetModeColor = settings.targetModeColor
-    definitionModeColor = settings.definitionModeColor
+    fromCaretModeColor = settings.fromCaretModeColor
+    betweenPointsModeColor = settings.betweenPointsModeColor
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor
+    acceptedTagColor = settings.acceptedTagColor
   }
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575

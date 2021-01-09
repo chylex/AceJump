@@ -19,31 +19,31 @@ import kotlin.collections.component2
 /**
  * Assigns tags to search occurrences, updates them when the search query changes, and requests a jump if the search query matches a tag.
  */
-internal class Tagger(private val editor: Editor) {
+class Tagger(private val editor: Editor) {
   private var tagMap = HashBiMap.create<String, Int>()
   
   val hasTags
     get() = tagMap.isNotEmpty()
   
   @ExternalUsage
-  val tags
+  internal val tags
     get() = tagMap.map { SimpleImmutableEntry(it.key, it.value) }.sortedBy { it.value }
     
   /**
    * Removes all markers, allowing them to be regenerated from scratch.
    */
-  fun unmark() {
+  internal fun unmark() {
     tagMap = HashBiMap.create()
   }
   
   /**
-   * Assigns tags to as many results as possible, keeping previously assigned tags. Returns a [TaggingResult.Jump] if the current search
+   * Assigns tags to as many results as possible, keeping previously assigned tags. Returns a [TaggingResult.Accept] if the current search
    * query matches any existing tag and we should jump to it and end the session, or [TaggingResult.Mark] to continue the session with
    * updated tag markers.
    *
    * Note that the [results] collection will be mutated.
    */
-  fun markOrJump(query: SearchQuery, results: IntList): TaggingResult {
+  internal fun update(query: SearchQuery, results: IntList): TaggingResult {
     val isRegex = query is SearchQuery.RegularExpression
     val queryText = if (isRegex) " ${query.rawText}" else query.rawText[0] + query.rawText.drop(1).toLowerCase()
     
@@ -52,7 +52,7 @@ internal class Tagger(private val editor: Editor) {
     if (!isRegex) {
       for (entry in tagMap.entries) {
         if (entry solves queryText) {
-          return TaggingResult.Jump(entry.value)
+          return TaggingResult.Accept(entry.value)
         }
       }
       
@@ -66,6 +66,10 @@ internal class Tagger(private val editor: Editor) {
     }
     
     return TaggingResult.Mark(createTagMarkers(results, query.rawText.ifEmpty { null }))
+  }
+  
+  fun clone(): Tagger {
+    return Tagger(editor).also { it.tagMap.putAll(tagMap) }
   }
   
   /**
