@@ -32,7 +32,6 @@ internal class AceSettingsPanel {
   private val tagBackgroundColorWheel = ColorPanel()
   private val acceptedTagColorWheel = ColorPanel()
   private val roundedTagCornersCheckBox = JBCheckBox()
-  private val searchWholeFileCheckBox = JBCheckBox()
   
   init {
     tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
@@ -61,10 +60,6 @@ internal class AceSettingsPanel {
     titledRow("Appearance") {
       row { short(roundedTagCornersCheckBox.apply { text = "Rounded tag corners" }) }
     }
-    
-    titledRow("Behavior") {
-      row { short(searchWholeFileCheckBox.apply { text = "Search whole file" }) }
-    }
   }
   
   // Property-to-property delegation: https://stackoverflow.com/q/45074596/1772342
@@ -77,7 +72,6 @@ internal class AceSettingsPanel {
   internal var tagBackgroundColor by tagBackgroundColorWheel
   internal var acceptedTagColor by acceptedTagColorWheel
   internal var roundedTagCorners by roundedTagCornersCheckBox
-  internal var searchWholeFile by searchWholeFileCheckBox
   
   fun reset(settings: AceSettings) {
     allowedChars = settings.allowedChars
@@ -88,7 +82,6 @@ internal class AceSettingsPanel {
     tagBackgroundColor = settings.tagBackgroundColor
     acceptedTagColor = settings.acceptedTagColor
     roundedTagCorners = settings.roundedTagCorners
-    searchWholeFile = settings.searchWholeFile
   }
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575

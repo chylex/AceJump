@@ -11,16 +11,12 @@ import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.impl.AbstractColorsScheme
 import com.intellij.ui.LightweightHint
 import org.acejump.ExternalUsage
-import org.acejump.action.TagVisitor
 import org.acejump.boundaries.Boundaries
-import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries
 import org.acejump.config.AceConfig
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
 import org.acejump.interact.TypeResult
-import org.acejump.interact.VisitDirection
-import org.acejump.interact.VisitResult
 import org.acejump.interact.mode.DefaultMode
 import org.acejump.search.*
 import org.acejump.view.TagCanvas
@@ -52,9 +48,6 @@ class Session(private val editor: Editor) {
         }
       }
     }
-  
-  private val tagVisitor
-    get() = searchProcessor?.let { TagVisitor(editor, it) }
   
   private val textHighlighter = TextHighlighter(editor)
   private val tagCanvas = TagCanvas(editor)
@@ -108,13 +101,6 @@ class Session(private val editor: Editor) {
         val tags = result.tags
         tagCanvas.setMarkers(tags, isRegex = query is SearchQuery.RegularExpression)
         textHighlighter.renderOccurrences(results, query)
-        
-        val cache = EditorOffsetCache.new()
-        val boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
-        
-        if (tags.none { boundaries.isOffsetInside(editor, it.offsetL, cache) || boundaries.isOffsetInside(editor, it.offsetR, cache) }) {
-          tagVisitor?.scrollToClosest()
-        }
       }
     }
   }
@@ -178,19 +164,6 @@ class Session(private val editor: Editor) {
    */
   fun startRegexSearch(pattern: Pattern, boundaries: Boundaries) {
     startRegexSearch(pattern.regex, boundaries)
-  }
-  
-  /**
-   * See [TagVisitor] for common behavior, but [SessionMode]s may override the behavior in certain or all situations.
-   */
-  fun selectTag(direction: VisitDirection) {
-    val processor = searchProcessor ?: return
-    
-    when (val result = mode.visit(editor, processor, direction, acceptedTag)) {
-      VisitResult.EndSession        -> end()
-      is VisitResult.SetAcceptedTag -> acceptedTag = result.offset
-      else                          -> return
-    }
   }
   
   /**

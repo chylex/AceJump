@@ -5,7 +5,6 @@ import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler
 import org.acejump.boundaries.StandardBoundaries
-import org.acejump.interact.VisitDirection
 import org.acejump.search.Pattern
 import org.acejump.session.Session
 import org.acejump.session.SessionManager
@@ -39,14 +38,6 @@ sealed class AceEditorAction(private val originalHandler: EditorActionHandler) :
   
   class ClearSearch(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
     override fun run(session: Session) = session.restart()
-  }
-  
-  class SelectBackward(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.selectTag(VisitDirection.BACKWARD)
-  }
-  
-  class SelectForward(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.selectTag(VisitDirection.FORWARD)
   }
   
   class SearchLineStarts(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
