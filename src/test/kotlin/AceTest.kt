@@ -1,6 +1,6 @@
 import com.intellij.openapi.actionSystem.IdeActions.ACTION_EDITOR_ENTER
 import com.intellij.openapi.actionSystem.IdeActions.ACTION_EDITOR_START_NEW_LINE
-import org.acejump.action.AceAction
+import org.acejump.action.AceKeyboardAction
 import org.acejump.test.util.BaseTest
 
 /**
@@ -56,6 +56,7 @@ class AceTest : BaseTest() {
     "<caret>testing 1234".search("g")
 
     typeAndWaitForResults(session.tags[0].key)
+    typeAndWaitForResults("j")
 
     myFixture.checkResult("testin<caret>g 1234")
   }
@@ -63,7 +64,8 @@ class AceTest : BaseTest() {
   fun `test shift selection`() {
     "<caret>testing 1234".search("4")
 
-    typeAndWaitForResults(session.tags[0].key.toUpperCase())
+    typeAndWaitForResults(session.tags[0].key)
+    typeAndWaitForResults("J")
 
     myFixture.checkResult("<selection>testing 123<caret></selection>4")
   }
@@ -71,7 +73,7 @@ class AceTest : BaseTest() {
   fun `test words before caret action`() {
     makeEditor("test words <caret> before caret is two")
 
-    takeAction(AceAction.StartAllWordsBackwardsMode)
+    takeAction(AceKeyboardAction.StartAllWordsBackwardsMode)
 
     assertEquals(2, session.tags.size)
   }
@@ -79,7 +81,7 @@ class AceTest : BaseTest() {
   fun `test words after caret action`() {
     makeEditor("test words <caret> after caret is four")
 
-    takeAction(AceAction.StartAllWordsForwardMode)
+    takeAction(AceKeyboardAction.StartAllWordsForwardMode)
 
     assertEquals(4, session.tags.size)
   }
@@ -87,11 +89,12 @@ class AceTest : BaseTest() {
   fun `test word mode`() {
     makeEditor("test word action")
 
-    takeAction(AceAction.StartAllWordsMode)
+    takeAction(AceKeyboardAction.StartAllWordsMode)
 
     assertEquals(3, session.tags.size)
 
     typeAndWaitForResults(session.tags[1].key)
+    typeAndWaitForResults("j")
 
     myFixture.checkResult("test <caret>word action")
   }
@@ -99,8 +102,8 @@ class AceTest : BaseTest() {
   fun `test target mode`() {
     "<caret>test target action".search("target")
 
-    takeAction(AceAction.ToggleTargetMode)
     typeAndWaitForResults(session.tags[0].key)
+    typeAndWaitForResults("s")
 
     myFixture.checkResult("test <selection>target<caret></selection> action")
   }
@@ -108,7 +111,7 @@ class AceTest : BaseTest() {
   fun `test line mode`() {
     makeEditor("    test\n    three\n    lines\n")
 
-    takeAction(AceAction.StartAllLineMarksMode)
+    takeAction(AceKeyboardAction.StartAllLineMarksMode)
 
     assertEquals(8, session.tags.size) // last empty line does not count
   }

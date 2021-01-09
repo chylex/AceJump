@@ -14,34 +14,26 @@ class AceConfigurable : Configurable {
   override fun isModified() =
     panel.allowedChars != settings.allowedChars ||
       panel.keyboardLayout != settings.layout ||
-      panel.cycleMode1 != settings.cycleMode1 ||
-      panel.cycleMode2 != settings.cycleMode2 ||
-      panel.cycleMode3 != settings.cycleMode3 ||
-      panel.cycleMode4 != settings.cycleMode4 ||
       panel.minQueryLengthInt != settings.minQueryLength ||
       panel.jumpModeColor != settings.jumpModeColor ||
-      panel.jumpEndModeColor != settings.jumpEndModeColor ||
-      panel.targetModeColor != settings.targetModeColor ||
-      panel.definitionModeColor != settings.definitionModeColor ||
+      panel.fromCaretModeColor != settings.fromCaretModeColor ||
+      panel.betweenPointsModeColor != settings.betweenPointsModeColor ||
       panel.textHighlightColor != settings.textHighlightColor ||
       panel.tagForegroundColor != settings.tagForegroundColor ||
-      panel.tagBackgroundColor != settings.tagBackgroundColor
+      panel.tagBackgroundColor != settings.tagBackgroundColor ||
+      panel.acceptedTagColor != settings.acceptedTagColor
   
   override fun apply() {
     settings.allowedChars = panel.allowedChars
     settings.layout = panel.keyboardLayout
-    settings.cycleMode1 = panel.cycleMode1
-    settings.cycleMode2 = panel.cycleMode2
-    settings.cycleMode3 = panel.cycleMode3
-    settings.cycleMode4 = panel.cycleMode4
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
-    panel.jumpEndModeColor?.let { settings.jumpEndModeColor = it }
-    panel.targetModeColor?.let { settings.targetModeColor = it }
-    panel.definitionModeColor?.let { settings.definitionModeColor = it }
+    panel.fromCaretModeColor?.let { settings.fromCaretModeColor = it }
+    panel.betweenPointsModeColor?.let { settings.betweenPointsModeColor = it }
     panel.textHighlightColor?.let { settings.textHighlightColor = it }
     panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
     panel.tagBackgroundColor?.let { settings.tagBackgroundColor = it }
+    panel.acceptedTagColor?.let { settings.acceptedTagColor = it }
     KeyLayoutCache.reset(settings)
   }
   

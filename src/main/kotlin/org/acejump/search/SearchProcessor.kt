@@ -10,7 +10,7 @@ import org.acejump.matchesAt
 /**
  * Searches editor text for matches of a [SearchQuery], and updates previous results when the user [type]s a character.
  */
-internal class SearchProcessor private constructor(private val editor: Editor, query: SearchQuery, boundaries: Boundaries) {
+class SearchProcessor private constructor(private val editor: Editor, query: SearchQuery) {
   companion object {
     fun fromChar(editor: Editor, char: Char, boundaries: Boundaries): SearchProcessor {
       return SearchProcessor(editor, SearchQuery.Literal(char.toString()), boundaries)
@@ -21,13 +21,7 @@ internal class SearchProcessor private constructor(private val editor: Editor, q
     }
   }
   
-  var query = query
-    private set
-  
-  var results = IntArrayList(0)
-    private set
-  
-  init {
+  private constructor(editor: Editor, query: SearchQuery, boundaries: Boundaries) : this(editor, query) {
     val regex = query.toRegex()
     
     if (regex != null) {
@@ -49,6 +43,12 @@ internal class SearchProcessor private constructor(private val editor: Editor, q
       }
     }
   }
+  
+  internal var query = query
+    private set
+  
+  internal var results = IntArrayList(0)
+    private set
   
   /**
    * Appends a character to the search query and removes all search results that no longer match the query. If the last typed character
@@ -119,5 +119,9 @@ internal class SearchProcessor private constructor(private val editor: Editor, q
     }
     
     results = remaining
+  }
+  
+  fun clone(): SearchProcessor {
+    return SearchProcessor(editor, query).also { it.results.addAll(results) }
   }
 }
