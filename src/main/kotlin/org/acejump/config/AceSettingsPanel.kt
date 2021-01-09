@@ -26,7 +26,8 @@ internal class AceSettingsPanel {
   private val tagCharsField = JBTextField()
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
-  private val singleCaretModeColorWheel = ColorPanel()
+  private val jumpModeColorWheel = ColorPanel()
+  private val fromCaretModeColorWheel = ColorPanel()
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
@@ -50,7 +51,8 @@ internal class AceSettingsPanel {
     }
     
     titledRow("Colors") {
-      row("Caret background:") { short(singleCaretModeColorWheel) }
+      row("Jump mode caret background:") { short(jumpModeColorWheel) }
+      row("From Caret mode caret background:") { short(fromCaretModeColorWheel) }
       row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
       row("Tag background:") { short(tagBackgroundColorWheel) }
@@ -66,7 +68,8 @@ internal class AceSettingsPanel {
   internal var allowedChars by tagCharsField
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
-  internal var singleCaretModeColor by singleCaretModeColorWheel
+  internal var jumpModeColor by jumpModeColorWheel
+  internal var fromCaretModeColor by fromCaretModeColorWheel
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
@@ -76,7 +79,8 @@ internal class AceSettingsPanel {
   fun reset(settings: AceSettings) {
     allowedChars = settings.allowedChars
     keyboardLayout = settings.layout
-    singleCaretModeColor = settings.singleCaretModeColor
+    jumpModeColor = settings.jumpModeColor
+    fromCaretModeColor = settings.fromCaretModeColor
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor

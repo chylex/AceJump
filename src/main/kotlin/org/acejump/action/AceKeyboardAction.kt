@@ -5,7 +5,6 @@ import com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR
 import com.intellij.openapi.project.DumbAwareAction
 import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries.*
-import org.acejump.interact.mode.DefaultMode
 import org.acejump.search.Pattern
 import org.acejump.session.Session
 import org.acejump.session.SessionManager
@@ -35,7 +34,7 @@ sealed class AceKeyboardAction : DumbAwareAction() {
    * Starts or ends an AceJump session.
    */
   object ActivateAceJump : AceKeyboardAction() {
-    override fun invoke(session: Session) = session.toggleMode(DefaultMode)
+    override fun invoke(session: Session) = session.cycleMode()
   }
   
   // @formatter:off

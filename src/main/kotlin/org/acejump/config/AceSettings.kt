@@ -10,7 +10,10 @@ data class AceSettings(
   var allowedChars: String = layout.allChars,
   
   @OptionTag("jumpModeRGB", converter = ColorConverter::class)
-  var singleCaretModeColor: Color = Color.BLUE,
+  var jumpModeColor: Color = Color.BLUE,
+  
+  @OptionTag("fromCaretModeRGB", converter = ColorConverter::class)
+  var fromCaretModeColor: Color = Color.ORANGE,
   
   @OptionTag("textHighlightRGB", converter = ColorConverter::class)
   var textHighlightColor: Color = Color.GREEN,

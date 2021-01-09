@@ -28,7 +28,7 @@ import kotlin.math.max
 /**
  * Base class for actions available after typing a tag.
  */
-internal sealed class AceTagAction {
+sealed class AceTagAction {
   abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean)
   
   abstract class BaseJumpAction : AceTagAction() {

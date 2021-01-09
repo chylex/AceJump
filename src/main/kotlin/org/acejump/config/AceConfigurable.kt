@@ -14,7 +14,8 @@ class AceConfigurable : Configurable {
   override fun isModified() =
     panel.allowedChars != settings.allowedChars ||
       panel.keyboardLayout != settings.layout ||
-      panel.singleCaretModeColor != settings.singleCaretModeColor ||
+      panel.jumpModeColor != settings.jumpModeColor ||
+      panel.fromCaretModeColor != settings.fromCaretModeColor ||
       panel.textHighlightColor != settings.textHighlightColor ||
       panel.tagForegroundColor != settings.tagForegroundColor ||
       panel.tagBackgroundColor != settings.tagBackgroundColor ||
@@ -24,7 +25,8 @@ class AceConfigurable : Configurable {
   override fun apply() {
     settings.allowedChars = panel.allowedChars
     settings.layout = panel.keyboardLayout
-    panel.singleCaretModeColor?.let { settings.singleCaretModeColor = it }
+    panel.jumpModeColor?.let { settings.jumpModeColor = it }
+    panel.fromCaretModeColor?.let { settings.fromCaretModeColor = it }
     panel.textHighlightColor?.let { settings.textHighlightColor = it }
     panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
     panel.tagBackgroundColor?.let { settings.tagBackgroundColor = it }
