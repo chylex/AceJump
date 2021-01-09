@@ -14,8 +14,10 @@ import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.editor.CaretState
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.actionSystem.DocCommandGroupId
 import com.intellij.openapi.fileEditor.ex.IdeDocumentHistory
 import com.intellij.openapi.project.Project
@@ -52,13 +54,23 @@ sealed class AceTagAction {
       if (shiftMode) {
         val caretModel = editor.caretModel
         val oldCarets = caretModel.caretsAndSelections
+        val oldOffsetPosition = caretModel.logicalPosition
         
         invoke(editor, searchProcessor, offset)
+        
+        if (caretModel.caretsAndSelections.any { isSelectionOverlapping(oldOffsetPosition, it) }) {
+          oldCarets.removeAll { isSelectionOverlapping(oldOffsetPosition, it) }
+        }
+        
         caretModel.caretsAndSelections = oldCarets + caretModel.caretsAndSelections
       }
       else {
         invoke(editor, searchProcessor, offset)
       }
+    }
+    
+    private fun isSelectionOverlapping(offset: LogicalPosition, oldCaret: CaretState): Boolean {
+      return oldCaret.caretPosition == offset || oldCaret.selectionStart == offset || oldCaret.selectionEnd == offset
     }
     
     protected abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int)
