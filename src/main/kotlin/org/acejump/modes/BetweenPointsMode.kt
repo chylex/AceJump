@@ -1,5 +1,6 @@
 package org.acejump.modes
 
+import com.intellij.openapi.editor.CaretState
 import org.acejump.action.AceTagAction
 import org.acejump.config.AceConfig
 import org.acejump.session.SessionMode
@@ -43,6 +44,7 @@ class BetweenPointsMode : SessionMode {
     get() = AceConfig.betweenPointsModeColor
   
   private var actionMode: ((AceTagAction.SelectBetweenPoints) -> AceTagAction)? = null
+  private var originalCarets: List<CaretState>? = null
   private var firstOffset: Int? = null
   
   override fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult {
@@ -63,12 +65,18 @@ class BetweenPointsMode : SessionMode {
   
     val firstOffset = firstOffset
     if (firstOffset == null) {
+      val caretModel = state.editor.caretModel
+      this.originalCarets = caretModel.caretsAndSelections
+      
       state.act(jumpAction, acceptedTag, shiftMode = false)
-      this.firstOffset = state.editor.caretModel.offset
+      this.firstOffset = caretModel.offset
       return TypeResult.RestartSearch
     }
     
-    state.act(actionMode(AceTagAction.SelectBetweenPoints(firstOffset, jumpAction)), acceptedTag, shiftMode = false) // TODO shift mode
+    val shiftMode = charTyped.isUpperCase()
+    originalCarets?.takeIf { shiftMode }?.let { state.editor.caretModel.caretsAndSelections = it }
+    state.act(actionMode(AceTagAction.SelectBetweenPoints(firstOffset, jumpAction)), acceptedTag, shiftMode)
+    
     return TypeResult.EndSession
   }
   

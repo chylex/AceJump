@@ -60,7 +60,7 @@ class FromCaretMode : SessionMode {
       return TypeResult.Nothing
     }
     
-    state.act(actionMode(AceTagAction.SelectToCaret(jumpAction)), acceptedTag, shiftMode = false) // TODO shift mode
+    state.act(actionMode(AceTagAction.SelectToCaret(jumpAction)), acceptedTag, shiftMode = charTyped.isUpperCase())
     return TypeResult.EndSession
   }
   
