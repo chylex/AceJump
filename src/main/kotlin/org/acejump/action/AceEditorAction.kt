@@ -40,14 +40,6 @@ sealed class AceEditorAction(private val originalHandler: EditorActionHandler) :
     override fun run(session: Session) = session.restart()
   }
   
-  class SelectBackward(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.visitPreviousTag()
-  }
-  
-  class SelectForward(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.visitNextTag()
-  }
-  
   class SearchLineStarts(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
     override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_STARTS, StandardBoundaries.VISIBLE_ON_SCREEN)
   }

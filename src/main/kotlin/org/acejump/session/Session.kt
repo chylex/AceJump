@@ -7,9 +7,7 @@ import com.intellij.openapi.editor.actionSystem.TypedActionHandler
 import com.intellij.openapi.editor.colors.EditorColors
 import org.acejump.ExternalUsage
 import org.acejump.action.TagJumper
-import org.acejump.action.TagVisitor
 import org.acejump.boundaries.Boundaries
-import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries
 import org.acejump.config.AceConfig
 import org.acejump.input.EditorKeyListener
@@ -47,9 +45,6 @@ class Session(private val editor: Editor) {
   private val tagJumper
     get() = TagJumper(editor, jumpMode, searchProcessor)
   
-  private val tagVisitor
-    get() = searchProcessor?.let { TagVisitor(editor, it, tagJumper) }
-  
   private val textHighlighter = TextHighlighter(editor)
   private val tagCanvas = TagCanvas(editor)
   
@@ -79,7 +74,6 @@ class Session(private val editor: Editor) {
   
   /**
    * Updates text highlights and tag markers according to the current search state. Dispatches jumps if the search query matches a tag.
-   * If all tags are outside view, scrolls to the closest one.
    */
   private fun updateSearch(processor: SearchProcessor, markImmediately: Boolean, shiftMode: Boolean = false) {
     val query = processor.query
@@ -101,13 +95,6 @@ class Session(private val editor: Editor) {
       is TaggingResult.Mark -> {
         val tags = result.tags
         tagCanvas.setMarkers(tags, isRegex = query is SearchQuery.RegularExpression)
-        
-        val cache = EditorOffsetCache.new()
-        val boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
-        
-        if (tags.none { boundaries.isOffsetInside(editor, it.offsetL, cache) || boundaries.isOffsetInside(editor, it.offsetR, cache) }) {
-          tagVisitor?.scrollToClosest()
-        }
       }
     }
   }
@@ -149,24 +136,6 @@ class Session(private val editor: Editor) {
    */
   fun toggleJumpMode(newMode: JumpMode) {
     jumpMode = jumpModeTracker.toggle(newMode)
-  }
-  
-  /**
-   * See [TagVisitor.visitPrevious]. If there are no tags, nothing happens.
-   */
-  fun visitPreviousTag() {
-    if (tagVisitor?.visitPrevious() == true) {
-      end()
-    }
-  }
-  
-  /**
-   * See [TagVisitor.visitNext]. If there are no tags, nothing happens.
-   */
-  fun visitNextTag() {
-    if (tagVisitor?.visitNext() == true) {
-      end()
-    }
   }
   
   /**
