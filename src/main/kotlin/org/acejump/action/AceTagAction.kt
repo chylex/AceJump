@@ -89,18 +89,14 @@ sealed class AceTagAction {
     abstract fun getCaretOffset(editor: Editor, queryStartOffset: Int, queryEndOffset: Int, isInsideWord: Boolean): Int
   }
   
-  abstract class BaseShiftRestoresCaretsAction : AceTagAction() {
-    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+  abstract class BaseCaretRestoringAction : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       val oldCarets = editor.caretModel.caretsAndSelections
-      
-      invoke(editor, searchProcessor, offset)
-      
-      if (shiftMode) {
-        editor.caretModel.caretsAndSelections = oldCarets
-      }
+      doInvoke(editor, searchProcessor, offset, shiftMode)
+      editor.caretModel.caretsAndSelections = oldCarets
     }
     
-    protected abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int)
+    protected abstract fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean)
   }
   
   private companion object {
@@ -305,29 +301,29 @@ sealed class AceTagAction {
     }
   }
   
-  class Cut(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+  class Cut(private val selector: AceTagAction) : BaseCaretRestoringAction() {
+    override fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       selector(editor, searchProcessor, offset, shiftMode = false)
       performAction(CutAction())
     }
   }
   
-  class Copy(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+  class Copy(private val selector: AceTagAction) : BaseCaretRestoringAction() {
+    override fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       selector(editor, searchProcessor, offset, shiftMode = false)
       performAction(CopyAction())
     }
   }
   
-  class Paste(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+  class Paste(private val selector: AceTagAction) : BaseCaretRestoringAction() {
+    override fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       selector(editor, searchProcessor, offset, shiftMode = false)
       performAction(PasteAction())
     }
   }
   
-  class Delete(private val selector: AceTagAction) : BaseShiftRestoresCaretsAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
+  class Delete(private val selector: AceTagAction) : BaseCaretRestoringAction() {
+    override fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       selector(editor, searchProcessor, offset, shiftMode = false)
       WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Delete").run<Throwable> {
         editor.selectionModel.let { editor.document.deleteString(it.selectionStart, it.selectionEnd) }
@@ -388,8 +384,8 @@ sealed class AceTagAction {
    * On shift action, performs the Go To Type Declaration action, available via `Navigate | Type Declaration`.
    * Always places the caret at the end of the search query.
    */
-  object GoToDeclaration : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+  object GoToDeclaration : BaseCaretRestoringAction() {
+    override fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
       performAction(if (shiftMode) GotoTypeDeclarationAction() else GotoDeclarationAction())
     }
@@ -400,29 +396,26 @@ sealed class AceTagAction {
    * On shift action, performs the Find Usages action, available via the context menu.
    * Always places the caret at the end of the search query.
    */
-  object ShowUsages : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+  object ShowUsages : BaseCaretRestoringAction() {
+    override fun doInvoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
       JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
       performAction(if (shiftMode) FindUsagesAction() else ShowUsagesAction())
     }
   }
   
   /**
-   * On default action, performs the Show Context Actions action, available via the context menu or Alt+Enter. Places the caret at the end
-   * of the search query.
-   *
-   * On shift action, does the above but without changing the caret position.
+   * Performs the Show Context Actions action, available via the context menu or Alt+Enter.
    */
-  object ShowIntentions : BaseShiftRestoresCaretsAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+  object ShowIntentions : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      JumpToWordStartTag(editor, searchProcessor, offset, shiftMode = false)
       performAction(ShowIntentionActionsAction())
     }
   }
   
   object Refactor : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+      JumpToWordStartTag(editor, searchProcessor, offset, shiftMode = false)
       performAction(RefactoringQuickListPopupAction())
     }
   }
