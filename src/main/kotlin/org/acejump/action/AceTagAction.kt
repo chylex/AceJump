@@ -22,6 +22,7 @@ import com.intellij.openapi.editor.actionSystem.DocCommandGroupId
 import com.intellij.openapi.fileEditor.ex.IdeDocumentHistory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.playback.commands.ActionCommand
+import com.intellij.openapi.util.TextRange
 import com.intellij.refactoring.actions.RefactoringQuickListPopupAction
 import org.acejump.*
 import org.acejump.search.SearchProcessor
@@ -330,6 +331,54 @@ sealed class AceTagAction {
       selector(editor, searchProcessor, offset, shiftMode = false)
       WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Delete").run<Throwable> {
         editor.selectionModel.let { editor.document.deleteString(it.selectionStart, it.selectionEnd) }
+      }
+    }
+  }
+  
+  class CloneToCaret(private val selector: AceTagAction) : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      val document = editor.document
+      val oldCarets = editor.caretModel.caretsAndSelections
+  
+      selector(editor, searchProcessor, offset, shiftMode = false)
+      val text = document.getText(editor.selectionModel.let { TextRange(it.selectionStart, it.selectionEnd) })
+  
+      editor.caretModel.caretsAndSelections = oldCarets
+      WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Clone").run<Throwable> {
+        insertAtCarets(editor, text)
+      }
+    }
+    
+    companion object {
+      fun insertAtCarets(editor: Editor, text: String) {
+        val document = editor.document
+        
+        editor.caretModel.runForEachCaret {
+          if (it.hasSelection()) {
+            document.replaceString(it.selectionStart, it.selectionEnd, text)
+          }
+          else {
+            document.insertString(it.offset, text)
+          }
+        }
+      }
+    }
+  }
+  
+  class MoveToCaret(private val selector: AceTagAction) : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+      val document = editor.document
+      val oldCarets = editor.caretModel.caretsAndSelections
+  
+      selector(editor, searchProcessor, offset, shiftMode = false)
+      val start = editor.selectionModel.selectionStart
+      val end = editor.selectionModel.selectionEnd
+      val text = document.getText(TextRange(start, end))
+  
+      editor.caretModel.caretsAndSelections = oldCarets
+      WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Move").run<Throwable> {
+        document.deleteString(start, end)
+        CloneToCaret.insertAtCarets(editor, text)
       }
     }
   }
