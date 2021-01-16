@@ -34,7 +34,5 @@ data class AceSettings(
   var tagForegroundColor: Color = Color(0xFFFFFF),
   
   @OptionTag("tagBackgroundRGB", converter = ColorConverter::class)
-  var tagBackgroundColor: Color = Color(0x008299),
-  
-  var searchWholeFile: Boolean = true
+  var tagBackgroundColor: Color = Color(0x008299)
 )

@@ -27,11 +27,6 @@ import org.acejump.view.TextHighlighter
  * Manages an AceJump session for a single [Editor].
  */
 class Session(private val editor: Editor) {
-  private companion object {
-    private val defaultBoundaries
-      get() = if (AceConfig.searchWholeFile) StandardBoundaries.WHOLE_FILE else StandardBoundaries.VISIBLE_ON_SCREEN
-  }
-  
   private val originalSettings = EditorSettings.setup(editor)
   
   private val jumpModeTracker = JumpModeTracker()
@@ -74,7 +69,7 @@ class Session(private val editor: Editor) {
         val hadTags = tagger.hasTags
         
         if (processor == null) {
-          processor = SearchProcessor.fromChar(editor, charTyped, defaultBoundaries).also { searchProcessor = it }
+          processor = SearchProcessor.fromChar(editor, charTyped, StandardBoundaries.VISIBLE_ON_SCREEN).also { searchProcessor = it }
         }
         else if (!processor.type(charTyped, tagger)) {
           return
@@ -127,7 +122,7 @@ class Session(private val editor: Editor) {
     tagger = Tagger(editor)
     tagCanvas.setMarkers(emptyList())
     
-    val processor = SearchProcessor.fromRegex(editor, pattern, boundaries.intersection(defaultBoundaries)).also { searchProcessor = it }
+    val processor = SearchProcessor.fromRegex(editor, pattern, boundaries).also { searchProcessor = it }
     updateSearch(processor, markImmediately = true)
   }
   

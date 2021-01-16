@@ -2,7 +2,6 @@ package org.acejump.config
 
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.ColorPanel
-import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.Cell
@@ -39,7 +38,6 @@ internal class AceSettingsPanel {
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
-  private val searchWholeFileCheckBox = JBCheckBox()
   
   init {
     tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
@@ -72,6 +70,10 @@ internal class AceSettingsPanel {
       }
     }
     
+    titledRow("Behavior") {
+      row("Minimum typed characters (1-10):") { short(minQueryLengthField) }
+    }
+    
     titledRow("Colors") {
       row("Jump mode caret background:") { short(jumpModeColorWheel) }
       row("Jump to End mode caret background:") { short(jumpEndModeColorWheel) }
@@ -80,11 +82,6 @@ internal class AceSettingsPanel {
       row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
       row("Tag background:") { short(tagBackgroundColorWheel) }
-    }
-    
-    titledRow("Behavior") {
-      row { short(searchWholeFileCheckBox.apply { text = "Search whole file" }) }
-      row("Minimum typed characters (1-10):") { short(minQueryLengthField) }
     }
   }
   
@@ -104,7 +101,6 @@ internal class AceSettingsPanel {
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
-  internal var searchWholeFile by searchWholeFileCheckBox
   
   internal var minQueryLengthInt
     get() = minQueryLength.toIntOrNull()?.coerceIn(1, 10)
@@ -125,7 +121,6 @@ internal class AceSettingsPanel {
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor
-    searchWholeFile = settings.searchWholeFile
   }
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575

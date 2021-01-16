@@ -3,16 +3,6 @@ package org.acejump.boundaries
 import com.intellij.openapi.editor.Editor
 
 enum class StandardBoundaries : Boundaries {
-  WHOLE_FILE {
-    override fun getOffsetRange(editor: Editor, cache: EditorOffsetCache): IntRange {
-      return 0 until editor.document.textLength
-    }
-    
-    override fun isOffsetInside(editor: Editor, offset: Int, cache: EditorOffsetCache): Boolean {
-      return offset in (0 until editor.document.textLength)
-    }
-  },
-  
   VISIBLE_ON_SCREEN {
     override fun getOffsetRange(editor: Editor, cache: EditorOffsetCache): IntRange {
       val (topLeft, bottomRight) = cache.visibleArea(editor)

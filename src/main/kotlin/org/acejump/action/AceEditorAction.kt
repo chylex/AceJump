@@ -49,14 +49,14 @@ sealed class AceEditorAction(private val originalHandler: EditorActionHandler) :
   }
   
   class SearchLineStarts(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_STARTS, StandardBoundaries.WHOLE_FILE)
+    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_STARTS, StandardBoundaries.VISIBLE_ON_SCREEN)
   }
   
   class SearchLineEnds(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_ENDS, StandardBoundaries.WHOLE_FILE)
+    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_ENDS, StandardBoundaries.VISIBLE_ON_SCREEN)
   }
   
   class SearchLineIndents(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_INDENTS, StandardBoundaries.WHOLE_FILE)
+    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_INDENTS, StandardBoundaries.VISIBLE_ON_SCREEN)
   }
 }
