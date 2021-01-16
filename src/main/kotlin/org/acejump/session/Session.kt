@@ -55,6 +55,7 @@ class Session(private val editor: Editor) {
     EditorKeyListener.attach(editor, object : TypedActionHandler {
       override fun execute(editor: Editor, charTyped: Char, context: DataContext) {
         val state = state ?: return
+        val hadTags = tagger.hasTags
         
         editorSettings.startEditing(editor)
         val result = mode.type(state, charTyped, acceptedTag)
@@ -63,7 +64,7 @@ class Session(private val editor: Editor) {
         when (result) {
           TypeResult.Nothing          -> updateHint()
           TypeResult.RestartSearch    -> restart().also { this@Session.state = SessionState(editor, tagger); updateHint() }
-          is TypeResult.UpdateResults -> updateSearch(result.processor)
+          is TypeResult.UpdateResults -> updateSearch(result.processor, markImmediately = hadTags)
           is TypeResult.ChangeMode    -> setMode(result.mode)
           TypeResult.EndSession       -> end()
         }
@@ -75,9 +76,14 @@ class Session(private val editor: Editor) {
    * Updates text highlights and tag markers according to the current search state. Dispatches jumps if the search query matches a tag.
    * If all tags are outside view, scrolls to the closest one.
    */
-  private fun updateSearch(processor: SearchProcessor) {
+  private fun updateSearch(processor: SearchProcessor, markImmediately: Boolean) {
     val query = processor.query
     val results = processor.results
+    
+    if (query is SearchQuery.Literal && !markImmediately && query.rawText.let { it.length < 2 && it.all(Char::isLetterOrDigit) }) {
+      textHighlighter.renderOccurrences(results, query)
+      return
+    }
     
     when (val result = tagger.update(query, results.clone())) {
       is TaggingResult.Accept -> {
@@ -148,7 +154,9 @@ class Session(private val editor: Editor) {
     setMode(JumpMode())
     tagger = Tagger(editor)
     tagCanvas.setMarkers(emptyList(), isRegex = true)
-    updateSearch(SearchProcessor.fromRegex(editor, pattern, boundaries).also { state = SessionState(editor, tagger, it) })
+    
+    val processor = SearchProcessor.fromRegex(editor, pattern, boundaries).also { state = SessionState(editor, tagger, it) }
+    updateSearch(processor, markImmediately = true)
   }
   
   /**

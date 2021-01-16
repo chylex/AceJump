@@ -22,6 +22,9 @@ import kotlin.collections.component2
 class Tagger(private val editor: Editor) {
   private var tagMap = HashBiMap.create<String, Int>()
   
+  val hasTags
+    get() = tagMap.isNotEmpty()
+  
   @ExternalUsage
   internal val tags
     get() = tagMap.map { SimpleImmutableEntry(it.key, it.value) }.sortedBy { it.value }
