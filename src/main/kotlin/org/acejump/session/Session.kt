@@ -138,6 +138,10 @@ class Session(private val editor: Editor) {
     jumpMode = jumpModeTracker.toggle(newMode)
   }
   
+  fun tagImmediately() {
+    searchProcessor?.let { updateSearch(it, markImmediately = true) }
+  }
+  
   /**
    * Ends this session.
    */

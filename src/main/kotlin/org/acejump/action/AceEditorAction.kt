@@ -40,6 +40,10 @@ sealed class AceEditorAction(private val originalHandler: EditorActionHandler) :
     override fun run(session: Session) = session.restart()
   }
   
+  class TagImmediately(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
+    override fun run(session: Session) = session.tagImmediately()
+  }
+  
   class SearchLineStarts(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
     override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_STARTS, StandardBoundaries.VISIBLE_ON_SCREEN)
   }
