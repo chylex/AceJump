@@ -40,7 +40,6 @@ internal class AceSettingsPanel {
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
   private val roundedTagCornersCheckBox = JBCheckBox()
-  private val searchWholeFileCheckBox = JBCheckBox()
   
   init {
     tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
@@ -73,6 +72,10 @@ internal class AceSettingsPanel {
       }
     }
     
+    titledRow("Behavior") {
+      row("Minimum typed characters (1-10):") { short(minQueryLengthField) }
+    }
+    
     titledRow("Colors") {
       row("Jump mode caret background:") { short(jumpModeColorWheel) }
       row("Jump to End mode caret background:") { short(jumpEndModeColorWheel) }
@@ -85,11 +88,6 @@ internal class AceSettingsPanel {
     
     titledRow("Appearance") {
       row { short(roundedTagCornersCheckBox.apply { text = "Rounded tag corners" }) }
-    }
-    
-    titledRow("Behavior") {
-      row { short(searchWholeFileCheckBox.apply { text = "Search whole file" }) }
-      row("Minimum typed characters (1-10):") { short(minQueryLengthField) }
     }
   }
   
@@ -110,7 +108,6 @@ internal class AceSettingsPanel {
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
   internal var roundedTagCorners by roundedTagCornersCheckBox
-  internal var searchWholeFile by searchWholeFileCheckBox
   
   internal var minQueryLengthInt
     get() = minQueryLength.toIntOrNull()?.coerceIn(1, 10)
@@ -132,7 +129,6 @@ internal class AceSettingsPanel {
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor
     roundedTagCorners = settings.roundedTagCorners
-    searchWholeFile = settings.searchWholeFile
   }
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575

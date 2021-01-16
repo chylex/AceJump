@@ -4,7 +4,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR
 import com.intellij.openapi.project.DumbAwareAction
 import org.acejump.boundaries.Boundaries
-import org.acejump.boundaries.StandardBoundaries
+import org.acejump.boundaries.StandardBoundaries.*
 import org.acejump.input.JumpMode
 import org.acejump.search.Pattern
 import org.acejump.session.Session
@@ -59,13 +59,13 @@ sealed class AceAction : DumbAwareAction() {
   object ToggleTargetMode      : BaseToggleJumpModeAction(JumpMode.TARGET)
   object ToggleDeclarationMode : BaseToggleJumpModeAction(JumpMode.DEFINE)
   
-  object StartAllWordsMode          : BaseRegexSearchAction(Pattern.ALL_WORDS, StandardBoundaries.WHOLE_FILE)
-  object StartAllWordsBackwardsMode : BaseRegexSearchAction(Pattern.ALL_WORDS, StandardBoundaries.BEFORE_CARET)
-  object StartAllWordsForwardMode   : BaseRegexSearchAction(Pattern.ALL_WORDS, StandardBoundaries.AFTER_CARET)
-  object StartAllLineStartsMode     : BaseRegexSearchAction(Pattern.LINE_STARTS, StandardBoundaries.WHOLE_FILE)
-  object StartAllLineEndsMode       : BaseRegexSearchAction(Pattern.LINE_ENDS, StandardBoundaries.WHOLE_FILE)
-  object StartAllLineIndentsMode    : BaseRegexSearchAction(Pattern.LINE_INDENTS, StandardBoundaries.WHOLE_FILE)
-  object StartAllLineMarksMode      : BaseRegexSearchAction(Pattern.LINE_ALL_MARKS, StandardBoundaries.WHOLE_FILE)
+  object StartAllWordsMode          : BaseRegexSearchAction(Pattern.ALL_WORDS, VISIBLE_ON_SCREEN)
+  object StartAllWordsBackwardsMode : BaseRegexSearchAction(Pattern.ALL_WORDS, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
+  object StartAllWordsForwardMode   : BaseRegexSearchAction(Pattern.ALL_WORDS, AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
+  object StartAllLineStartsMode     : BaseRegexSearchAction(Pattern.LINE_STARTS, VISIBLE_ON_SCREEN)
+  object StartAllLineEndsMode       : BaseRegexSearchAction(Pattern.LINE_ENDS, VISIBLE_ON_SCREEN)
+  object StartAllLineIndentsMode    : BaseRegexSearchAction(Pattern.LINE_INDENTS, VISIBLE_ON_SCREEN)
+  object StartAllLineMarksMode      : BaseRegexSearchAction(Pattern.LINE_ALL_MARKS, VISIBLE_ON_SCREEN)
   
   // @formatter:on
 }

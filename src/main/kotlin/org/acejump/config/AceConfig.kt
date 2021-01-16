@@ -29,7 +29,6 @@ class AceConfig : PersistentStateComponent<AceSettings> {
     val tagForegroundColor get() = settings.tagForegroundColor
     val tagBackgroundColor get() = settings.tagBackgroundColor
     val roundedTagCorners get() = settings.roundedTagCorners
-    val searchWholeFile get() = settings.searchWholeFile
   }
   
   override fun getState(): AceSettings {

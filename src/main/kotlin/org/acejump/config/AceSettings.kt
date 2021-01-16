@@ -36,6 +36,5 @@ data class AceSettings(
   @OptionTag("tagBackgroundRGB", converter = ColorConverter::class)
   var tagBackgroundColor: Color = Color.YELLOW,
   
-  var roundedTagCorners: Boolean = true,
-  var searchWholeFile: Boolean = true
+  var roundedTagCorners: Boolean = true
 )
