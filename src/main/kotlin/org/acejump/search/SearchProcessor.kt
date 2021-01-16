@@ -36,12 +36,13 @@ internal class SearchProcessor private constructor(private val editor: Editor, q
       
       while (result != null) {
         val index = result.range.first // For some reason regex matches can be out of bounds, but boundary check prevents an exception.
+        val highlightEnd = index + query.getHighlightLength("", index)
         
-        if (boundaries.isOffsetInside(editor, index)) {
-          results.add(index)
-        }
-        else if (index > offsetRange.last) {
+        if (highlightEnd > offsetRange.last) {
           break
+        }
+        else if (boundaries.isOffsetInside(editor, index)) {
+          results.add(index)
         }
         
         result = result.next()
