@@ -25,8 +25,7 @@ class AceConfigurable : Configurable {
       panel.definitionModeColor != settings.definitionModeColor ||
       panel.textHighlightColor != settings.textHighlightColor ||
       panel.tagForegroundColor != settings.tagForegroundColor ||
-      panel.tagBackgroundColor != settings.tagBackgroundColor ||
-      panel.roundedTagCorners != settings.roundedTagCorners
+      panel.tagBackgroundColor != settings.tagBackgroundColor
   
   override fun apply() {
     settings.allowedChars = panel.allowedChars
@@ -43,7 +42,6 @@ class AceConfigurable : Configurable {
     panel.textHighlightColor?.let { settings.textHighlightColor = it }
     panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
     panel.tagBackgroundColor?.let { settings.tagBackgroundColor = it }
-    settings.roundedTagCorners = panel.roundedTagCorners
     KeyLayoutCache.reset(settings)
   }
   

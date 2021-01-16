@@ -2,7 +2,6 @@ package org.acejump.config
 
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.ColorPanel
-import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.Cell
@@ -39,7 +38,6 @@ internal class AceSettingsPanel {
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
-  private val roundedTagCornersCheckBox = JBCheckBox()
   
   init {
     tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
@@ -85,10 +83,6 @@ internal class AceSettingsPanel {
       row("Tag foreground:") { short(tagForegroundColorWheel) }
       row("Tag background:") { short(tagBackgroundColorWheel) }
     }
-    
-    titledRow("Appearance") {
-      row { short(roundedTagCornersCheckBox.apply { text = "Rounded tag corners" }) }
-    }
   }
   
   // Property-to-property delegation: https://stackoverflow.com/q/45074596/1772342
@@ -107,7 +101,6 @@ internal class AceSettingsPanel {
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
-  internal var roundedTagCorners by roundedTagCornersCheckBox
   
   internal var minQueryLengthInt
     get() = minQueryLength.toIntOrNull()?.coerceIn(1, 10)
@@ -128,7 +121,6 @@ internal class AceSettingsPanel {
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor
-    roundedTagCorners = settings.roundedTagCorners
   }
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575
