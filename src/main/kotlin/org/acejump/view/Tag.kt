@@ -60,7 +60,7 @@ internal class Tag(
     private fun drawForeground(g: Graphics2D, font: TagFont, point: Point, text: String) {
       g.font = font.tagFont
       g.color = AceConfig.tagForegroundColor
-      g.drawString(text, point.x, point.y + font.baselineDistance)
+      g.drawString(text, point.x + 1, point.y + font.baselineDistance)
     }
   }
   
@@ -130,12 +130,12 @@ internal class Tag(
   private fun createRightAlignedTagRect(editor: Editor, cache: EditorOffsetCache, font: TagFont): Rectangle {
     val pos = cache.offsetToXY(editor, offsetR)
     val shift = font.editorFontMetrics.charWidth(editor.immutableText[offsetR]) + (font.tagCharWidth * shiftR)
-    return Rectangle(pos.x + shift, pos.y, font.tagCharWidth * length, font.lineHeight)
+    return Rectangle(pos.x + shift, pos.y, (font.tagCharWidth * length) + 2, font.lineHeight)
   }
   
   private fun createLeftAlignedTagRect(editor: Editor, cache: EditorOffsetCache, font: TagFont): Rectangle {
     val pos = cache.offsetToXY(editor, offsetL)
     val shift = -(font.tagCharWidth * length)
-    return Rectangle(pos.x + shift, pos.y, font.tagCharWidth * length, font.lineHeight)
+    return Rectangle(pos.x + shift - 2, pos.y, (font.tagCharWidth * length) + 2, font.lineHeight)
   }
 }
