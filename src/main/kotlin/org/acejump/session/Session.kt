@@ -14,7 +14,10 @@ import org.acejump.input.EditorKeyListener
 import org.acejump.input.JumpMode
 import org.acejump.input.JumpModeTracker
 import org.acejump.input.KeyLayoutCache
-import org.acejump.search.*
+import org.acejump.search.Pattern
+import org.acejump.search.SearchProcessor
+import org.acejump.search.Tagger
+import org.acejump.search.TaggingResult
 import org.acejump.view.TagCanvas
 import org.acejump.view.TextHighlighter
 
@@ -94,7 +97,7 @@ class Session(private val editor: Editor) {
       
       is TaggingResult.Mark -> {
         val tags = result.tags
-        tagCanvas.setMarkers(tags, isRegex = query is SearchQuery.RegularExpression)
+        tagCanvas.setMarkers(tags)
       }
     }
   }
@@ -104,7 +107,7 @@ class Session(private val editor: Editor) {
    */
   fun startRegexSearch(pattern: String, boundaries: Boundaries) {
     tagger = Tagger(editor)
-    tagCanvas.setMarkers(emptyList(), isRegex = true)
+    tagCanvas.setMarkers(emptyList())
     
     val processor = SearchProcessor.fromRegex(editor, pattern, boundaries).also { searchProcessor = it }
     updateSearch(processor, markImmediately = true)
