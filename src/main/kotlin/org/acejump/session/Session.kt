@@ -13,6 +13,7 @@ import com.intellij.ui.LightweightHint
 import org.acejump.ExternalUsage
 import org.acejump.boundaries.Boundaries
 import org.acejump.config.AceConfig
+import org.acejump.immutableText
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
 import org.acejump.modes.BetweenPointsMode
@@ -161,7 +162,21 @@ class Session(private val editor: Editor) {
   }
   
   fun tagImmediately() {
-    state?.currentProcessor?.let { updateSearch(it, markImmediately = true) }
+    val state = state ?: return
+    val processor = state.currentProcessor
+    
+    if (processor != null) {
+      updateSearch(processor, markImmediately = true)
+    }
+    else if (mode is JumpMode) {
+      val offset = editor.caretModel.offset
+      val result = editor.immutableText.getOrNull(offset)?.let(state::type)
+      if (result is TypeResult.UpdateResults) {
+        acceptedTag = offset
+        textHighlighter.renderFinal(offset, result.processor.query)
+        updateHint()
+      }
+    }
   }
   
   /**
