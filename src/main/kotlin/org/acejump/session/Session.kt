@@ -66,6 +66,7 @@ class Session(private val editor: Editor) {
           TypeResult.Nothing          -> updateHint()
           TypeResult.RestartSearch    -> restart().also { this@Session.state = SessionStateImpl(editor, tagger); updateHint() }
           is TypeResult.UpdateResults -> updateSearch(result.processor, markImmediately = hadTags)
+          is TypeResult.MoveHint      -> { textHighlighter.reset(); acceptedTag = result.offset; updateHint() }
           is TypeResult.ChangeMode    -> setMode(result.mode)
           TypeResult.EndSession       -> end()
         }

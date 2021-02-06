@@ -39,9 +39,12 @@ class JumpMode : SessionMode {
     private val ALL_HINTS = arrayOf(
       *JUMP_HINT,
       *SELECT_HINT,
+      "Select <f>[P]</f>rogressively...",
       "<f>[D]</f>eclaration / <f>[U]</f>sages",
       "<f>[I]</f>ntentions / <f>[R]</f>efactor"
     )
+  
+    private const val ACTION_SELECT_PROGRESSIVELY = 'P'
     
     private val ALL_ACTION_MAP = mapOf(
       *JUMP_ACTION_MAP.map { it.key to it.value }.toTypedArray(),
@@ -65,6 +68,10 @@ class JumpMode : SessionMode {
     if (action != null) {
       state.act(action, acceptedTag, charTyped.isUpperCase())
       return TypeResult.EndSession
+    }
+    else if (charTyped.equals(ACTION_SELECT_PROGRESSIVELY, ignoreCase = true)) {
+      state.act(AceTagAction.SelectQuery, acceptedTag, charTyped.isUpperCase())
+      return TypeResult.ChangeMode(ProgressiveSelectionMode())
     }
   
     return TypeResult.Nothing
