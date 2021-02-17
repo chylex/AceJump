@@ -1,6 +1,6 @@
-<idea-plugin url="https://github.com/acejump/AceJump">
+<idea-plugin>
   <name>AceJump</name>
-  <id>AceJump</id>
+  <id>AceJump-chylex</id>
 
   <description><![CDATA[
     AceJump allows you to quickly navigate the caret to any position visible in the editor.
