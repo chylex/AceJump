@@ -43,4 +43,4 @@ intellij {
 }
 
 group = "org.acejump"
-version = "4.0"
+version = "chylex"
