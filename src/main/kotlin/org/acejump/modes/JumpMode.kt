@@ -8,8 +8,8 @@ import org.acejump.session.TypeResult
 class JumpMode : SessionMode {
   companion object {
     private val JUMP_HINT = arrayOf(
-      "<f>[J]</f>ump / <f>[L]</f> past Query / <f>[M]</f> Line End",
-      "Word <f>[S]</f>tart / <f>[E]</f>nd"
+      "<f>[J]</f>ump / <f>[L]</f> past Query",
+      "<f>[E]</f> Word End / <f>[M]</f> Line End"
     )
     
     val JUMP_ALT_HINT = JUMP_HINT.map { it.replace("<f>[J]</f>ump ", "<f>[J]</f> at Tag ") }.toTypedArray()
@@ -17,9 +17,8 @@ class JumpMode : SessionMode {
     val JUMP_ACTION_MAP = mapOf(
       'J' to AceTagAction.JumpToSearchStart,
       'L' to AceTagAction.JumpPastSearchEnd,
-      'M' to AceTagAction.JumpToLineEnd,
-      'S' to AceTagAction.JumpToWordStart,
-      'E' to AceTagAction.JumpToWordEnd
+      'E' to AceTagAction.JumpToWordEnd,
+      'M' to AceTagAction.JumpToLineEnd
     )
     
     val SELECT_HINT = arrayOf(
