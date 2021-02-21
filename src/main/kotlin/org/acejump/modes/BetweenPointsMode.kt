@@ -80,6 +80,10 @@ class BetweenPointsMode : SessionMode {
     return TypeResult.EndSession
   }
   
+  override fun accept(state: SessionState, acceptedTag: Int): Boolean {
+    return false
+  }
+  
   override fun getHint(acceptedTag: Int?, hasQuery: Boolean): Array<String>? {
     return when {
       actionMode == null  -> ACTION_MODE_HINT

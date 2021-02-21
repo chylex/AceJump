@@ -8,5 +8,6 @@ interface SessionMode {
   val caretColor: Color
   
   fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult
+  fun accept(state: SessionState, acceptedTag: Int): Boolean
   fun getHint(acceptedTag: Int?, hasQuery: Boolean): Array<String>?
 }

@@ -23,6 +23,10 @@ class SelectFromCaretMode : SessionMode {
     return TypeResult.EndSession
   }
   
+  override fun accept(state: SessionState, acceptedTag: Int): Boolean {
+    return false
+  }
+  
   override fun getHint(acceptedTag: Int?, hasQuery: Boolean): Array<String>? {
     return JumpMode.JUMP_ALT_HINT.takeIf { acceptedTag != null }
   }

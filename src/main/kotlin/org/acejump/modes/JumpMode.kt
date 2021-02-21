@@ -69,6 +69,10 @@ class JumpMode : SessionMode {
     return TypeResult.Nothing
   }
   
+  override fun accept(state: SessionState, acceptedTag: Int): Boolean {
+    return false
+  }
+  
   override fun getHint(acceptedTag: Int?, hasQuery: Boolean): Array<String>? {
     return ALL_HINTS.takeIf { acceptedTag != null }
   }

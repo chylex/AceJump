@@ -52,6 +52,9 @@
       <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl shift SEMICOLON"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift SEMICOLON"/>
     </action>
+    <action id="AceQuickJumpAction"
+            class="org.acejump.action.AceKeyboardAction$StartQuickJumpMode"
+            text="Activate AceJump in Quick Jump Mode"/>
     <action id="AceLineStartsAction"
             class="org.acejump.action.AceKeyboardAction$StartAllLineStartsMode"
             text="Start AceJump in All Line Starts Mode"/>
