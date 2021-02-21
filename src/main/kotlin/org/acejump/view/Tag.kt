@@ -1,6 +1,7 @@
 package org.acejump.view
 
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.util.SystemInfo
 import com.intellij.ui.ColorUtil
 import com.intellij.ui.scale.JBUIScale
 import org.acejump.boundaries.EditorOffsetCache
@@ -28,6 +29,11 @@ internal class Tag(
   
   companion object {
     private const val ARC = 1
+  
+    /**
+     * TODO This might be due to DPI settings.
+     */
+    private val HIGHLIGHT_OFFSET = if (SystemInfo.isMac) -0.5 else 0.0
     
     /**
      * Creates a new tag, precomputing some information about the nearby characters to reduce rendering overhead. If the last typed
@@ -51,7 +57,9 @@ internal class Tag(
      */
     private fun drawHighlight(g: Graphics2D, rect: Rectangle, color: Color) {
       g.color = color
+      g.translate(0.0, HIGHLIGHT_OFFSET)
       g.fillRoundRect(rect.x, rect.y, rect.width, rect.height + 1, ARC, ARC)
+      g.translate(0.0, -HIGHLIGHT_OFFSET)
     }
     
     /**
