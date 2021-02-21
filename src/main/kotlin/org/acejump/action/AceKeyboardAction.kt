@@ -31,10 +31,17 @@ sealed class AceKeyboardAction : DumbAwareAction() {
   }
   
   /**
-   * Starts or ends an AceJump session.
+   * Starts or cycles main AceJump modes.
    */
   object ActivateAceJump : AceKeyboardAction() {
-    override fun invoke(session: Session) = session.cycleMode()
+    override fun invoke(session: Session) = session.startOrCycleMode()
+  }
+  
+  /**
+   * Starts or ends an AceJump session in quick jump mode.
+   */
+  object StartQuickJumpMode : AceKeyboardAction() {
+    override fun invoke(session: Session) = session.startQuickJumpMode()
   }
   
   // @formatter:off

@@ -18,6 +18,7 @@ import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
 import org.acejump.modes.BetweenPointsMode
 import org.acejump.modes.JumpMode
+import org.acejump.modes.QuickJumpMode
 import org.acejump.modes.SessionMode
 import org.acejump.search.*
 import org.acejump.view.TagCanvas
@@ -90,6 +91,11 @@ class Session(private val editor: Editor) {
         val offset = result.offset
         acceptedTag = offset
         textHighlighter.renderFinal(offset, processor.query)
+        
+        if (state?.let { mode.accept(it, offset) } == true) {
+          end()
+          return
+        }
       }
       
       is TaggingResult.Mark   -> {
@@ -123,7 +129,7 @@ class Session(private val editor: Editor) {
     HintManagerImpl.getInstanceImpl().showEditorHint(hint, editor, point, flags, 0, true, info)
   }
   
-  fun cycleMode() {
+  fun startOrCycleMode() {
     if (!this::mode.isInitialized) {
       setMode(JumpMode())
       state = SessionStateImpl(editor, tagger)
@@ -136,6 +142,20 @@ class Session(private val editor: Editor) {
       else        -> JumpMode()
     })
     
+    state = SessionStateImpl(editor, tagger)
+  }
+  
+  fun startQuickJumpMode() {
+    if (this::mode.isInitialized && mode is QuickJumpMode) {
+      end()
+      return
+    }
+    
+    if (this::mode.isInitialized) {
+      restart()
+    }
+    
+    setMode(QuickJumpMode())
     state = SessionStateImpl(editor, tagger)
   }
   
