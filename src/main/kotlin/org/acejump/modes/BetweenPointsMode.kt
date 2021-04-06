@@ -46,14 +46,14 @@ class BetweenPointsMode : SessionMode {
     }
     
     if (firstOffset == null) {
-      val selectAction = JumpMode.SELECT_ACTION_MAP[charTyped.toUpperCase()]
+      val selectAction = AdvancedMode.SELECT_ACTION_MAP[charTyped.toUpperCase()]
       if (selectAction != null) {
         state.act(actionMode(selectAction), acceptedTag, shiftMode = charTyped.isUpperCase())
         return TypeResult.EndSession
       }
     }
     
-    val jumpAction = JumpMode.JUMP_ACTION_MAP[charTyped.toUpperCase()]
+    val jumpAction = AdvancedMode.JUMP_ACTION_MAP[charTyped.toUpperCase()]
     if (jumpAction == null) {
       return TypeResult.Nothing
     }
@@ -82,8 +82,8 @@ class BetweenPointsMode : SessionMode {
     return when {
       actionMode == null  -> ACTION_MODE_HINT
       acceptedTag == null -> TYPE_TAG_HINT.takeUnless { hasQuery }
-      firstOffset == null -> JumpMode.JUMP_ALT_HINT + JumpMode.SELECT_HINT
-      else                -> JumpMode.JUMP_ALT_HINT
+      firstOffset == null -> AdvancedMode.JUMP_ALT_HINT + AdvancedMode.SELECT_HINT
+      else                -> AdvancedMode.JUMP_ALT_HINT
     }
   }
 }

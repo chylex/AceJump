@@ -16,9 +16,9 @@ import org.acejump.config.AceConfig
 import org.acejump.immutableText
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
+import org.acejump.modes.AdvancedMode
 import org.acejump.modes.BetweenPointsMode
 import org.acejump.modes.JumpMode
-import org.acejump.modes.QuickJumpMode
 import org.acejump.modes.SessionMode
 import org.acejump.search.*
 import org.acejump.view.TagCanvas
@@ -129,24 +129,8 @@ class Session(private val editor: Editor) {
     HintManagerImpl.getInstanceImpl().showEditorHint(hint, editor, point, flags, 0, true, info)
   }
   
-  fun startOrCycleMode() {
-    if (!this::mode.isInitialized) {
-      setMode(JumpMode())
-      state = SessionStateImpl(editor, tagger)
-      return
-    }
-    
-    restart()
-    setMode(when (mode) {
-      is JumpMode -> BetweenPointsMode()
-      else        -> JumpMode()
-    })
-    
-    state = SessionStateImpl(editor, tagger)
-  }
-  
-  fun startQuickJumpMode() {
-    if (this::mode.isInitialized && mode is QuickJumpMode) {
+  fun startJumpMode() {
+    if (this::mode.isInitialized && mode is JumpMode) {
       end()
       return
     }
@@ -155,7 +139,23 @@ class Session(private val editor: Editor) {
       restart()
     }
     
-    setMode(QuickJumpMode())
+    setMode(JumpMode())
+    state = SessionStateImpl(editor, tagger)
+  }
+  
+  fun startOrCycleSpecialModes() {
+    if (!this::mode.isInitialized) {
+      setMode(AdvancedMode())
+      state = SessionStateImpl(editor, tagger)
+      return
+    }
+    
+    restart()
+    setMode(when (mode) {
+      is AdvancedMode -> BetweenPointsMode()
+      else            -> AdvancedMode()
+    })
+    
     state = SessionStateImpl(editor, tagger)
   }
   
@@ -164,7 +164,7 @@ class Session(private val editor: Editor) {
    */
   fun startRegexSearch(pattern: String, boundaries: Boundaries) {
     if (!this::mode.isInitialized) {
-      setMode(JumpMode())
+      setMode(AdvancedMode())
     }
     
     tagger = Tagger(editor)
@@ -188,7 +188,7 @@ class Session(private val editor: Editor) {
     if (processor != null) {
       updateSearch(processor, markImmediately = true)
     }
-    else if (mode is JumpMode) {
+    else if (mode is AdvancedMode) {
       val offset = editor.caretModel.offset
       val result = editor.immutableText.getOrNull(offset)?.let(state::type)
       if (result is TypeResult.UpdateResults) {

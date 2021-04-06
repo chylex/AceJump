@@ -40,10 +40,17 @@
   <actions>
     <action id="AceAction"
             class="org.acejump.action.AceKeyboardAction$ActivateAceJump"
-            text="Activate AceJump Mode">
+            text="Activate AceJump">
       <keyboard-shortcut keymap="Mac OS X" first-keystroke="ctrl SEMICOLON"/>
       <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl SEMICOLON"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl SEMICOLON"/>
+    </action>
+    <action id="AceSpecialAction"
+            class="org.acejump.action.AceKeyboardAction$ActivateAceJumpSpecial"
+            text="Activate / Cycle AceJump Special Modes">
+      <keyboard-shortcut keymap="Mac OS X" first-keystroke="ctrl alt SEMICOLON"/>
+      <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl alt SEMICOLON"/>
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt SEMICOLON"/>
     </action>
     <action id="AceLineAction"
             class="org.acejump.action.AceKeyboardAction$StartAllLineMarksMode"
@@ -52,9 +59,6 @@
       <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl shift SEMICOLON"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl shift SEMICOLON"/>
     </action>
-    <action id="AceQuickJumpAction"
-            class="org.acejump.action.AceKeyboardAction$StartQuickJumpMode"
-            text="Activate AceJump in Quick Jump Mode"/>
     <action id="AceLineStartsAction"
             class="org.acejump.action.AceKeyboardAction$StartAllLineStartsMode"
             text="Start AceJump in All Line Starts Mode"/>

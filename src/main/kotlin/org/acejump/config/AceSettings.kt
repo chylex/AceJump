@@ -13,8 +13,8 @@ data class AceSettings(
   @OptionTag("jumpModeRGB", converter = ColorConverter::class)
   var jumpModeColor: Color = Color(0xFFFFFF),
   
-  @OptionTag("fromCaretModeRGB", converter = ColorConverter::class)
-  var fromCaretModeColor: Color = Color(0xFFB700),
+  @OptionTag("advancedModeRGB", converter = ColorConverter::class)
+  var advancedModeColor: Color = Color(0xFFB700),
   
   @OptionTag("betweenPointsModeRGB", converter = ColorConverter::class)
   var betweenPointsModeColor: Color = Color(0x6FC5FF),

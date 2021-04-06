@@ -27,7 +27,7 @@ internal class AceSettingsPanel {
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
   private val jumpModeColorWheel = ColorPanel()
-  private val fromCaretModeColorWheel = ColorPanel()
+  private val advancedModeColorWheel = ColorPanel()
   private val betweenPointsModeColorWheel = ColorPanel()
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
@@ -56,7 +56,7 @@ internal class AceSettingsPanel {
     
     titledRow("Colors") {
       row("Jump mode caret background:") { short(jumpModeColorWheel) }
-      row("From Caret mode caret background:") { short(fromCaretModeColorWheel) }
+      row("Advanced mode caret background:") { short(advancedModeColorWheel) }
       row("Between Points mode caret background:") { short(betweenPointsModeColorWheel) }
       row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
@@ -71,7 +71,7 @@ internal class AceSettingsPanel {
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
   internal var jumpModeColor by jumpModeColorWheel
-  internal var fromCaretModeColor by fromCaretModeColorWheel
+  internal var advancedModeColor by advancedModeColorWheel
   internal var betweenPointsModeColor by betweenPointsModeColorWheel
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
@@ -87,7 +87,7 @@ internal class AceSettingsPanel {
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
     jumpModeColor = settings.jumpModeColor
-    fromCaretModeColor = settings.fromCaretModeColor
+    advancedModeColor = settings.advancedModeColor
     betweenPointsModeColor = settings.betweenPointsModeColor
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
