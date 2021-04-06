@@ -13,13 +13,11 @@ class BetweenPointsMode : SessionMode {
     )
   
     private val ACTION_MODE_HINT = arrayOf(
-      "<f>[S]</f>elect... / <f>[F]</f>rom Caret...",
+      "<f>[S]</f>elect...",
       "<f>[D]</f>elete...",
       "<f>[C]</f>lone to Caret...",
       "<f>[M]</f>ove to Caret..."
     )
-    
-    private const val ACTION_MODE_FROM_CARET = 'F'
     
     private val ACTION_MODE_MAP = mapOf(
       'S' to ({ action: AceTagAction.BaseSelectAction -> action }),
@@ -39,10 +37,6 @@ class BetweenPointsMode : SessionMode {
   override fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult {
     val actionMode = actionMode
     if (actionMode == null) {
-      if (charTyped.equals(ACTION_MODE_FROM_CARET, ignoreCase = true)) {
-        return TypeResult.ChangeMode(SelectFromCaretMode())
-      }
-      
       this.actionMode = ACTION_MODE_MAP[charTyped.toUpperCase()]
       return TypeResult.Nothing
     }
