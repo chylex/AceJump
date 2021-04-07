@@ -35,21 +35,21 @@ enum class StandardBoundaries : Boundaries {
   
   BEFORE_CARET {
     override fun getOffsetRange(editor: Editor, cache: EditorOffsetCache): IntRange {
-      return 0..(editor.caretModel.offset)
+      return 0 until editor.caretModel.offset
     }
     
     override fun isOffsetInside(editor: Editor, offset: Int, cache: EditorOffsetCache): Boolean {
-      return offset <= editor.caretModel.offset
+      return offset < editor.caretModel.offset
     }
   },
   
   AFTER_CARET {
     override fun getOffsetRange(editor: Editor, cache: EditorOffsetCache): IntRange {
-      return editor.caretModel.offset until editor.document.textLength
+      return (editor.caretModel.offset + 1) until editor.document.textLength
     }
     
     override fun isOffsetInside(editor: Editor, offset: Int, cache: EditorOffsetCache): Boolean {
-      return offset >= editor.caretModel.offset
+      return offset > editor.caretModel.offset
     }
   }
 }

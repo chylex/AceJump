@@ -5,5 +5,9 @@ enum class Pattern(val regex: String) {
   LINE_ENDS("\\n|\\Z"),
   LINE_INDENTS("[^\\s].*|^\\n"),
   LINE_ALL_MARKS(LINE_ENDS.regex + "|" + LINE_STARTS.regex + "|" + LINE_INDENTS.regex),
-  ALL_WORDS("(?<=[^a-zA-Z0-9_]|\\A)[a-zA-Z0-9_]");
+  ALL_WORDS("(?<=[^a-zA-Z0-9_]|\\A)[a-zA-Z0-9_]"),
+  VIM_LWORD("(?<=[^a-zA-Z0-9_]|\\A)[a-zA-Z0-9_]"),
+  VIM_UWORD("(?<=\\s|\\A)[^\\s]"),
+  VIM_LWORD_END("[a-zA-Z0-9_](?=[^a-zA-Z0-9_]|\\Z)"),
+  VIM_UWORD_END("[^\\s](?=\\s|\\Z)")
 }

@@ -12,7 +12,7 @@ import org.acejump.session.SessionManager
 /**
  * Base class for keyboard-activated actions that create or update an AceJump [Session].
  */
-sealed class AceKeyboardAction : DumbAwareAction() {
+abstract class AceKeyboardAction : DumbAwareAction() {
   final override fun update(action: AnActionEvent) {
     action.presentation.isEnabled = action.getData(EDITOR) != null
   }
@@ -27,7 +27,10 @@ sealed class AceKeyboardAction : DumbAwareAction() {
    * Generic action type that starts a regex search.
    */
   abstract class BaseRegexSearchAction(private val pattern: Pattern, private val boundaries: Boundaries) : AceKeyboardAction() {
-    override fun invoke(session: Session) = session.startRegexSearch(pattern, boundaries)
+    override fun invoke(session: Session) {
+      session.defaultBoundary = boundaries
+      session.startRegexSearch(pattern)
+    }
   }
   
   /**

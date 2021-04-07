@@ -12,6 +12,7 @@ import com.intellij.openapi.editor.colors.impl.AbstractColorsScheme
 import com.intellij.ui.LightweightHint
 import org.acejump.ExternalUsage
 import org.acejump.boundaries.Boundaries
+import org.acejump.boundaries.StandardBoundaries
 import org.acejump.config.AceConfig
 import org.acejump.immutableText
 import org.acejump.input.EditorKeyListener
@@ -51,6 +52,8 @@ class Session(private val editor: Editor) {
   val tags
     get() = tagger.tags
   
+  var defaultBoundary: Boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
+  
   init {
     KeyLayoutCache.ensureInitialized(AceConfig.settings)
     
@@ -65,7 +68,7 @@ class Session(private val editor: Editor) {
         
         when (result) {
           TypeResult.Nothing          -> updateHint()
-          TypeResult.RestartSearch    -> restart().also { this@Session.state = SessionStateImpl(editor, tagger); updateHint() }
+          TypeResult.RestartSearch    -> restart().also { this@Session.state = SessionStateImpl(editor, tagger, defaultBoundary); updateHint() }
           is TypeResult.UpdateResults -> updateSearch(result.processor, markImmediately = hadTags)
           is TypeResult.ChangeMode    -> setMode(result.mode)
           TypeResult.EndSession       -> end()
@@ -140,13 +143,13 @@ class Session(private val editor: Editor) {
     }
     
     setMode(JumpMode())
-    state = SessionStateImpl(editor, tagger)
+    state = SessionStateImpl(editor, tagger, defaultBoundary)
   }
   
   fun startOrCycleSpecialModes() {
     if (!this::mode.isInitialized) {
       setMode(AdvancedMode())
-      state = SessionStateImpl(editor, tagger)
+      state = SessionStateImpl(editor, tagger, defaultBoundary)
       return
     }
     
@@ -156,29 +159,25 @@ class Session(private val editor: Editor) {
       else            -> AdvancedMode()
     })
     
-    state = SessionStateImpl(editor, tagger)
+    state = SessionStateImpl(editor, tagger, defaultBoundary)
   }
   
   /**
    * Starts a regular expression search. If a search was already active, it will be reset alongside its tags and highlights.
    */
-  fun startRegexSearch(pattern: String, boundaries: Boundaries) {
+  fun startRegexSearch(pattern: Pattern) {
     if (!this::mode.isInitialized) {
-      setMode(AdvancedMode())
+      setMode(JumpMode())
     }
     
     tagger = Tagger(editor)
     tagCanvas.setMarkers(emptyList())
     
-    val processor = SearchProcessor.fromRegex(editor, pattern, boundaries).also { state = SessionStateImpl(editor, tagger, it) }
+    val processor = SearchProcessor.fromRegex(editor, pattern.regex, defaultBoundary).also {
+      state = SessionStateImpl(editor, tagger, defaultBoundary, it)
+    }
+    
     updateSearch(processor, markImmediately = true)
-  }
-  
-  /**
-   * Starts a regular expression search. If a search was already active, it will be reset alongside its tags and highlights.
-   */
-  fun startRegexSearch(pattern: Pattern, boundaries: Boundaries) {
-    startRegexSearch(pattern.regex, boundaries)
   }
   
   fun tagImmediately() {
