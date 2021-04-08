@@ -21,7 +21,10 @@ import org.acejump.modes.AdvancedMode
 import org.acejump.modes.BetweenPointsMode
 import org.acejump.modes.JumpMode
 import org.acejump.modes.SessionMode
-import org.acejump.search.*
+import org.acejump.search.Pattern
+import org.acejump.search.SearchProcessor
+import org.acejump.search.Tagger
+import org.acejump.search.TaggingResult
 import org.acejump.view.TagCanvas
 import org.acejump.view.TextHighlighter
 
@@ -133,16 +136,20 @@ class Session(private val editor: Editor) {
   }
   
   fun startJumpMode() {
+    startJumpMode(::JumpMode)
+  }
+  
+  fun startJumpMode(mode: () -> JumpMode) {
     if (this::mode.isInitialized && mode is JumpMode) {
       end()
       return
     }
-    
+  
     if (this::mode.isInitialized) {
       restart()
     }
-    
-    setMode(JumpMode())
+  
+    setMode(mode())
     state = SessionStateImpl(editor, tagger, defaultBoundary)
   }
   

@@ -5,11 +5,12 @@ import org.acejump.config.AceConfig
 import org.acejump.session.SessionState
 import org.acejump.session.TypeResult
 
-class JumpMode : SessionMode {
+open class JumpMode : SessionMode {
   override val caretColor
     get() = AceConfig.jumpModeColor
   
-  private var wasUpperCase = false
+  protected var wasUpperCase = false
+    private set
   
   override fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult {
     wasUpperCase = charTyped.isUpperCase()
