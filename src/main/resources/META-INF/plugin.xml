@@ -110,5 +110,17 @@
     <action id="AceVimAction_UWordEndsBeforeCaret"
             class="org.acejump.action.AceVimAction$UWordEndsBeforeCaret"
             text="AceJump Vim - UWordEndsBeforeCaret"/>
+    <action id="AceVimAction_GoToDeclaration"
+            class="org.acejump.action.AceVimAction$GoToDeclaration"
+            text="AceJump Vim - GoToDeclaration"/>
+    <action id="AceVimAction_GoToTypeDeclaration"
+            class="org.acejump.action.AceVimAction$GoToTypeDeclaration"
+            text="AceJump Vim - GoToTypeDeclaration"/>
+    <action id="AceVimAction_ShowUsages"
+            class="org.acejump.action.AceVimAction$ShowUsages"
+            text="AceJump Vim - ShowUsages"/>
+    <action id="AceVimAction_FindUsages"
+            class="org.acejump.action.AceVimAction$FindUsages"
+            text="AceJump Vim - FindUsages"/>
   </actions>
 </idea-plugin>
