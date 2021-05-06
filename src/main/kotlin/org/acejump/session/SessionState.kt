@@ -1,10 +1,9 @@
 package org.acejump.session
 
-import com.intellij.openapi.editor.Editor
 import org.acejump.action.AceTagAction
+import org.acejump.search.Tag
 
 interface SessionState {
-  val editor: Editor
   fun type(char: Char): TypeResult
-  fun act(action: AceTagAction, offset: Int, shiftMode: Boolean)
+  fun act(action: AceTagAction, tag: Tag, shiftMode: Boolean, isFinal: Boolean)
 }

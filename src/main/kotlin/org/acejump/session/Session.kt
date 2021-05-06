@@ -13,6 +13,7 @@ import com.intellij.ui.LightweightHint
 import org.acejump.ExternalUsage
 import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries
+import org.acejump.clone
 import org.acejump.config.AceConfig
 import org.acejump.immutableText
 import org.acejump.input.EditorKeyListener
@@ -21,35 +22,32 @@ import org.acejump.modes.AdvancedMode
 import org.acejump.modes.BetweenPointsMode
 import org.acejump.modes.JumpMode
 import org.acejump.modes.SessionMode
-import org.acejump.search.Pattern
-import org.acejump.search.SearchProcessor
-import org.acejump.search.Tagger
-import org.acejump.search.TaggingResult
+import org.acejump.search.*
 import org.acejump.view.TagCanvas
 import org.acejump.view.TextHighlighter
 
 /**
  * Manages an AceJump session for a single [Editor].
  */
-class Session(private val editor: Editor) {
-  private val editorSettings = EditorSettings.setup(editor)
+class Session(private val mainEditor: Editor, private val jumpEditors: List<Editor>) {
+  private val editorSettings = EditorSettings.setup(mainEditor)
   private lateinit var mode: SessionMode
   
   private var state: SessionStateImpl? = null
-  private var tagger = Tagger(editor)
+  private var tagger = Tagger(jumpEditors)
   
-  private var acceptedTag: Int? = null
+  private var acceptedTag: Tag? = null
     set(value) {
       field = value
       
       if (value != null) {
-        tagCanvas.removeMarkers()
-        editorSettings.onTagAccepted(editor)
+        tagCanvases.values.forEach(TagCanvas::removeMarkers)
+        editorSettings.onTagAccepted(mainEditor)
       }
     }
   
-  private val textHighlighter = TextHighlighter(editor)
-  private val tagCanvas = TagCanvas(editor)
+  private val textHighlighter = TextHighlighter()
+  private val tagCanvases = jumpEditors.associateWith(::TagCanvas)
   
   @ExternalUsage
   val tags
@@ -60,7 +58,7 @@ class Session(private val editor: Editor) {
   init {
     KeyLayoutCache.ensureInitialized(AceConfig.settings)
     
-    EditorKeyListener.attach(editor, object : TypedActionHandler {
+    EditorKeyListener.attach(mainEditor, object : TypedActionHandler {
       override fun execute(editor: Editor, charTyped: Char, context: DataContext) {
         val state = state ?: return
         val hadTags = tagger.hasTags
@@ -71,9 +69,14 @@ class Session(private val editor: Editor) {
         
         when (result) {
           TypeResult.Nothing          -> updateHint()
-          TypeResult.RestartSearch    -> restart().also { this@Session.state = SessionStateImpl(editor, tagger, defaultBoundary); updateHint() }
           is TypeResult.UpdateResults -> updateSearch(result.processor, markImmediately = hadTags)
           is TypeResult.ChangeMode    -> setMode(result.mode)
+          
+          TypeResult.RestartSearch    -> restart().also {
+            this@Session.state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
+            updateHint()
+          }
+          
           TypeResult.EndSession       -> end()
         }
       }
@@ -94,19 +97,20 @@ class Session(private val editor: Editor) {
     
     when (val result = tagger.update(query, results.clone())) {
       is TaggingResult.Accept -> {
-        val offset = result.offset
-        acceptedTag = offset
-        textHighlighter.renderFinal(offset, processor.query)
+        acceptedTag = result.tag
+        textHighlighter.renderFinal(result.tag, processor.query)
         
-        if (state?.let { mode.accept(it, offset) } == true) {
+        if (state?.let { mode.accept(it, result.tag) } == true) {
           end()
           return
         }
       }
       
       is TaggingResult.Mark   -> {
-        val tags = result.tags
-        tagCanvas.setMarkers(tags)
+        for ((editor, canvas) in tagCanvases) {
+          canvas.setMarkers(result.markers[editor].orEmpty())
+        }
+        
         textHighlighter.renderOccurrences(results, query)
       }
     }
@@ -116,19 +120,27 @@ class Session(private val editor: Editor) {
   
   private fun setMode(mode: SessionMode) {
     this.mode = mode
-    editor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
+    mainEditor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
     updateHint()
   }
   
   private fun updateHint() {
-    val hintArray = mode.getHint(acceptedTag, state?.currentProcessor.let { it != null && it.query.rawText.isNotEmpty() }) ?: return
+    val acceptedTag = acceptedTag
+    val editor = mainEditor
+    val offset = when {
+      acceptedTag == null           -> null
+      acceptedTag.editor === editor -> acceptedTag.offset
+      else                          -> mainEditor.caretModel.offset
+    }
+    
+    val hintArray = mode.getHint(offset, state?.currentProcessor.let { it != null && it.query.rawText.isNotEmpty() }) ?: return
     val hintText = hintArray
       .joinToString("\n")
       .replace("<f>", "<span style=\"font-family:'${editor.colorsScheme.editorFontName}';font-weight:bold\">")
       .replace("</f>", "</span>")
     
     val hint = LightweightHint(HintUtil.createInformationLabel(hintText))
-    val pos = acceptedTag?.let(editor::offsetToLogicalPosition) ?: editor.caretModel.logicalPosition
+    val pos = offset?.let(editor::offsetToLogicalPosition) ?: editor.caretModel.logicalPosition
     val point = HintManagerImpl.getHintPosition(hint, editor, pos, HintManager.ABOVE)
     val info = HintManagerImpl.createHintHint(editor, point, hint, HintManager.ABOVE).setShowImmediately(true)
     val flags = HintManager.UPDATE_BY_SCROLLING or HintManager.HIDE_BY_ESCAPE
@@ -144,19 +156,19 @@ class Session(private val editor: Editor) {
       end()
       return
     }
-  
+    
     if (this::mode.isInitialized) {
       restart()
     }
-  
+    
     setMode(mode())
-    state = SessionStateImpl(editor, tagger, defaultBoundary)
+    state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
   }
   
   fun startOrCycleSpecialModes() {
     if (!this::mode.isInitialized) {
       setMode(AdvancedMode())
-      state = SessionStateImpl(editor, tagger, defaultBoundary)
+      state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
       return
     }
     
@@ -166,7 +178,7 @@ class Session(private val editor: Editor) {
       else            -> AdvancedMode()
     })
     
-    state = SessionStateImpl(editor, tagger, defaultBoundary)
+    state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
   }
   
   /**
@@ -177,11 +189,11 @@ class Session(private val editor: Editor) {
       setMode(JumpMode())
     }
     
-    tagger = Tagger(editor)
-    tagCanvas.setMarkers(emptyList())
+    tagger = Tagger(jumpEditors)
+    tagCanvases.values.forEach { it.setMarkers(emptyList()) }
     
-    val processor = SearchProcessor.fromRegex(editor, pattern.regex, defaultBoundary).also {
-      state = SessionStateImpl(editor, tagger, defaultBoundary, it)
+    val processor = SearchProcessor.fromRegex(jumpEditors, pattern.regex, defaultBoundary).also {
+      state = SessionStateImpl(jumpEditors, tagger, defaultBoundary, it)
     }
     
     updateSearch(processor, markImmediately = true)
@@ -195,11 +207,11 @@ class Session(private val editor: Editor) {
       updateSearch(processor, markImmediately = true)
     }
     else if (mode is AdvancedMode) {
-      val offset = editor.caretModel.offset
-      val result = editor.immutableText.getOrNull(offset)?.let(state::type)
+      val offset = mainEditor.caretModel.offset
+      val result = mainEditor.immutableText.getOrNull(offset)?.let(state::type)
       if (result is TypeResult.UpdateResults) {
-        acceptedTag = offset
-        textHighlighter.renderFinal(offset, result.processor.query)
+        val tag = Tag(mainEditor, offset).also { acceptedTag = it }
+        textHighlighter.renderFinal(tag, result.processor.query)
         updateHint()
       }
     }
@@ -209,7 +221,7 @@ class Session(private val editor: Editor) {
    * Ends this session.
    */
   fun end() {
-    SessionManager.end(editor)
+    SessionManager.end(mainEditor)
   }
   
   /**
@@ -217,31 +229,33 @@ class Session(private val editor: Editor) {
    */
   fun restart() {
     state = null
-    tagger = Tagger(editor)
+    tagger = Tagger(jumpEditors)
     acceptedTag = null
-    tagCanvas.removeMarkers()
+    tagCanvases.values.forEach(TagCanvas::removeMarkers)
     textHighlighter.reset()
     
     HintManagerImpl.getInstanceImpl().hideAllHints()
-    editorSettings.onTagUnaccepted(editor)
-    editor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
-    editor.contentComponent.repaint()
+    editorSettings.onTagUnaccepted(mainEditor)
+    mainEditor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
+    jumpEditors.forEach { it.contentComponent.repaint() }
   }
   
   /**
    * Should only be used from [SessionManager] to dispose a successfully ended session.
    */
   internal fun dispose() {
-    tagger = Tagger(editor)
-    tagCanvas.unbind()
+    tagger = Tagger(jumpEditors)
+    tagCanvases.values.forEach(TagCanvas::unbind)
     textHighlighter.reset()
-    EditorKeyListener.detach(editor)
+    EditorKeyListener.detach(mainEditor)
     
-    if (!editor.isDisposed) {
+    if (!mainEditor.isDisposed) {
       HintManagerImpl.getInstanceImpl().hideAllHints()
-      editorSettings.restore(editor)
-      editor.colorsScheme.setColor(EditorColors.CARET_COLOR, AbstractColorsScheme.INHERITED_COLOR_MARKER)
-      editor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
+      editorSettings.restore(mainEditor)
+      mainEditor.colorsScheme.setColor(EditorColors.CARET_COLOR, AbstractColorsScheme.INHERITED_COLOR_MARKER)
+      
+      val focusedEditor = acceptedTag?.editor ?: mainEditor
+      focusedEditor.scrollingModel.scrollToCaret(ScrollType.MAKE_VISIBLE)
     }
   }
 }

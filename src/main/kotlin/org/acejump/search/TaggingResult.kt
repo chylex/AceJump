@@ -1,8 +1,9 @@
 package org.acejump.search
 
-import org.acejump.view.Tag
+import com.intellij.openapi.editor.Editor
+import org.acejump.view.TagMarker
 
 internal sealed class TaggingResult {
-  class Accept(val offset: Int) : TaggingResult()
-  class Mark(val tags: List<Tag>) : TaggingResult()
+  class Accept(val tag: Tag) : TaggingResult()
+  class Mark(val markers: MutableMap<Editor, Collection<TagMarker>>) : TaggingResult()
 }

@@ -18,6 +18,8 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.actionSystem.DocCommandGroupId
 import com.intellij.openapi.editor.actions.EditorActionUtil
+import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.fileEditor.ex.IdeDocumentHistory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.playback.commands.ActionCommand
@@ -34,14 +36,19 @@ import kotlin.math.max
  * Base class for actions available after typing a tag.
  */
 sealed class AceTagAction {
-  abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean)
+  abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean)
   
   abstract class BaseJumpAction : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       val caretModel = editor.caretModel
       val oldCarets = if (shiftMode) caretModel.caretsAndSelections else emptyList()
       
       recordCaretPosition(editor)
+      
+      if (isFinal) {
+        ensureEditorFocused(editor)
+      }
+      
       moveCaretTo(editor, getCaretOffset(editor, searchProcessor, offset))
       
       if (shiftMode) {
@@ -65,7 +72,7 @@ sealed class AceTagAction {
   }
   
   abstract class BaseSelectAction : AceTagAction() {
-    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       if (shiftMode) {
         val caretModel = editor.caretModel
         val oldCarets = caretModel.caretsAndSelections
@@ -92,9 +99,9 @@ sealed class AceTagAction {
   }
   
   abstract class BasePerCaretWriteAction(private val selector: AceTagAction) : AceTagAction() {
-    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       val oldCarets = editor.caretModel.caretsAndSelections
-      selector(editor, searchProcessor, offset, shiftMode = false)
+      selector(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
       val range = editor.selectionModel.let { TextRange(it.selectionStart, it.selectionEnd) }
       
       editor.caretModel.caretsAndSelections = oldCarets
@@ -102,7 +109,7 @@ sealed class AceTagAction {
     }
     
     protected abstract operator fun invoke(editor: Editor, range: TextRange, shiftMode: Boolean)
-  
+    
     protected fun insertAtCarets(editor: Editor, text: String) {
       val document = editor.document
       
@@ -117,7 +124,7 @@ sealed class AceTagAction {
         }
       }
     }
-  
+    
     private fun fixIndents(editor: Editor, startOffset: Int, endOffset: Int) {
       val project = editor.project ?: return
       val document = editor.document
@@ -160,6 +167,16 @@ sealed class AceTagAction {
     
     fun performAction(action: AnAction) {
       ActionManager.getInstance().tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
+    }
+    
+    fun ensureEditorFocused(editor: Editor) {
+      val project = editor.project ?: return
+      val fem = FileEditorManagerEx.getInstanceEx(project)
+      
+      val window = fem.windows.firstOrNull { (it.selectedEditor?.selectedWithProvider?.fileEditor as? TextEditor)?.editor === editor }
+      if (window != null && window !== fem.currentWindow) {
+        fem.currentWindow = window
+      }
     }
     
     private fun addCurrentPositionToHistory(project: Project, document: Document) {
@@ -286,7 +303,7 @@ sealed class AceTagAction {
         selectRange(editor, startOffset, endOffset)
       }
       else {
-        SelectQuery(editor, searchProcessor, offset, shiftMode = false)
+        SelectQuery(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       }
     }
   }
@@ -311,7 +328,7 @@ sealed class AceTagAction {
         selectRange(editor, startOffset, endOffset)
       }
       else {
-        SelectQuery(editor, searchProcessor, offset, shiftMode = false)
+        SelectQuery(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       }
     }
   }
@@ -324,7 +341,7 @@ sealed class AceTagAction {
    */
   object SelectAroundWord : BaseSelectAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      SelectWord(editor, searchProcessor, offset, shiftMode = false)
+      SelectWord(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       val text = editor.immutableText
       var selectionStart = editor.selectionModel.selectionStart
       var selectionEnd = editor.selectionModel.selectionEnd
@@ -352,7 +369,7 @@ sealed class AceTagAction {
    */
   object SelectLine : BaseSelectAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       
       val document = editor.document
       val line = editor.caretModel.logicalPosition.line
@@ -371,7 +388,7 @@ sealed class AceTagAction {
    */
   class SelectExtended(private val extendCount: Int) : BaseSelectAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false)
+      JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       
       val action = ActionManager.getInstance().getAction(IdeActions.ACTION_EDITOR_SELECT_WORD_AT_CARET)
       
@@ -390,8 +407,8 @@ sealed class AceTagAction {
       val caretModel = editor.caretModel
       val oldOffset = caretModel.offset
       val oldSelection = editor.selectionModel.takeIf { it.hasSelection(false) }?.let { it.selectionStart..it.selectionEnd }
-      
-      jumper(editor, searchProcessor, offset, shiftMode = false)
+  
+      jumper(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       
       val newOffset = caretModel.offset
       
@@ -410,7 +427,7 @@ sealed class AceTagAction {
    */
   class SelectBetweenPoints(private val firstOffset: Int, private val secondOffsetJumper: BaseJumpAction) : BaseSelectAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      secondOffsetJumper(editor, searchProcessor, offset, shiftMode = false)
+      secondOffsetJumper(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       selectRange(editor, firstOffset, editor.caretModel.offset)
     }
   }
@@ -420,10 +437,10 @@ sealed class AceTagAction {
    * On shift action, moves caret to the position where deletion occurred.
    */
   class Delete(private val selector: AceTagAction) : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       val oldCarets = editor.caretModel.caretsAndSelections
-      
-      selector(editor, searchProcessor, offset, shiftMode = false)
+  
+      selector(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
       WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Delete").run<Throwable> {
         editor.selectionModel.let { editor.document.deleteString(it.selectionStart, it.selectionEnd) }
       }
@@ -478,8 +495,8 @@ sealed class AceTagAction {
    * Always places the caret at the start of the word.
    */
   object GoToDeclaration : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false)
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
+      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
       performAction(if (shiftMode) GotoTypeDeclarationAction() else GotoDeclarationAction())
     }
   }
@@ -490,8 +507,8 @@ sealed class AceTagAction {
    * Always places the caret at the start of the word.
    */
   object ShowUsages : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false)
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
+      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
       performAction(if (shiftMode) FindUsagesAction() else ShowUsagesAction())
     }
   }
@@ -501,8 +518,8 @@ sealed class AceTagAction {
    * Always places the caret at the start of the word.
    */
   object ShowIntentions : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false)
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
+      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
       performAction(ShowIntentionActionsAction())
     }
   }
@@ -513,8 +530,8 @@ sealed class AceTagAction {
    * Always places the caret at the start of the word.
    */
   object Refactor : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean) {
-      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false)
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
+      JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
       if (shiftMode) {
         ApplicationManager.getApplication().invokeLater { performAction(RenameElementAction()) }
       }

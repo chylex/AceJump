@@ -12,20 +12,21 @@ import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.config.AceConfig
 import org.acejump.immutableText
 import org.acejump.search.SearchQuery
+import org.acejump.search.Tag
 import java.awt.Color
 import java.awt.Graphics
 
 /**
  * Renders highlights for search occurrences.
  */
-internal class TextHighlighter(private val editor: Editor) {
-  private var previousHighlights: Array<RangeHighlighter>? = null
+internal class TextHighlighter {
+  private var previousHighlights = mutableMapOf<Editor, Array<RangeHighlighter>>()
   
   /**
    * Removes all current highlights and re-creates them from scratch. Must be called whenever any of the method parameters change.
    */
-  fun renderOccurrences(offsets: IntList, query: SearchQuery) {
-    render(offsets, when (query) {
+  fun renderOccurrences(results: Map<Editor, IntList>, query: SearchQuery) {
+    render(results, when (query) {
       is SearchQuery.RegularExpression -> RegexRenderer
       else                             -> SearchedWordRenderer
     }, query::getHighlightLength)
@@ -34,43 +35,52 @@ internal class TextHighlighter(private val editor: Editor) {
   /**
    * Removes all current highlights and re-adds a single highlight at the position of the accepted tag with a different color.
    */
-  fun renderFinal(offset: Int, query: SearchQuery) {
-    render(IntArrayList(intArrayOf(offset)), AcceptedTagRenderer, query::getHighlightLength)
+  fun renderFinal(tag: Tag, query: SearchQuery) {
+    render(mutableMapOf(tag.editor to IntArrayList(intArrayOf(tag.offset))), AcceptedTagRenderer, query::getHighlightLength)
   }
   
-  private inline fun render(offsets: IntList, renderer: CustomHighlighterRenderer, getHighlightLength: (CharSequence, Int) -> Int) {
-    val markup = editor.markupModel
-    val chars = editor.immutableText
-    
-    val modifications = (previousHighlights?.size ?: 0) + offsets.size
-    val enableBulkEditing = modifications > 1000
-    
-    val document = editor.document
-    
-    try {
-      if (enableBulkEditing) {
-        document.isInBulkUpdate = true
-      }
+  private inline fun render(results: Map<Editor, IntList>, renderer: CustomHighlighterRenderer, getHighlightLength: (CharSequence, Int) -> Int) {
+    for ((editor, offsets) in results) {
+      val highlights = previousHighlights[editor]
       
-      previousHighlights?.forEach(markup::removeHighlighter)
-      previousHighlights = Array(offsets.size) { index ->
-        val start = offsets.getInt(index)
-        val end = start + getHighlightLength(chars, start)
+      val markup = editor.markupModel
+      val document = editor.document
+      val chars = editor.immutableText
+      
+      val modifications = (highlights?.size ?: 0) + offsets.size
+      val enableBulkEditing = modifications > 1000
+      
+      try {
+        if (enableBulkEditing) {
+          document.isInBulkUpdate = true
+        }
         
-        markup.addRangeHighlighter(start, end, LAYER, null, HighlighterTargetArea.EXACT_RANGE).apply {
-          customRenderer = renderer
+        highlights?.forEach(markup::removeHighlighter)
+        previousHighlights[editor] = Array(offsets.size) { index ->
+          val start = offsets.getInt(index)
+          val end = start + getHighlightLength(chars, start)
+          
+          markup.addRangeHighlighter(start, end, LAYER, null, HighlighterTargetArea.EXACT_RANGE).apply {
+            customRenderer = renderer
+          }
+        }
+      } finally {
+        if (enableBulkEditing) {
+          document.isInBulkUpdate = false
         }
       }
-    } finally {
-      if (enableBulkEditing) {
-        document.isInBulkUpdate = false
+    }
+    
+    for (editor in previousHighlights.keys.toList()) {
+      if (!results.containsKey(editor)) {
+        previousHighlights.remove(editor)?.forEach(editor.markupModel::removeHighlighter)
       }
     }
   }
   
   fun reset() {
-    editor.markupModel.removeAllHighlighters()
-    previousHighlights = null
+    previousHighlights.keys.forEach { it.markupModel.removeAllHighlighters() }
+    previousHighlights.clear()
   }
   
   /**
@@ -106,7 +116,7 @@ internal class TextHighlighter(private val editor: Editor) {
     private fun drawFilled(g: Graphics, editor: Editor, startOffset: Int, endOffset: Int, color: Color) {
       val start = EditorOffsetCache.Uncached.offsetToXY(editor, startOffset)
       val end = EditorOffsetCache.Uncached.offsetToXY(editor, endOffset)
-    
+      
       g.color = color
       g.fillRect(start.x, start.y + 1, end.x - start.x, editor.lineHeight - 1)
       

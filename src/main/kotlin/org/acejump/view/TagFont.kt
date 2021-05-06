@@ -6,7 +6,7 @@ import java.awt.Font
 import java.awt.FontMetrics
 
 /**
- * Stores font metrics for aligning and rendering [Tag]s.
+ * Stores font metrics for aligning and rendering [TagMarker]s.
  */
 internal class TagFont(editor: Editor) {
   val tagFont: Font = editor.colorsScheme.getFont(EditorFontType.BOLD)

@@ -5,8 +5,8 @@ import org.acejump.search.SearchProcessor
 
 sealed class TypeResult {
   object Nothing : TypeResult()
-  object RestartSearch : TypeResult()
   class UpdateResults(val processor: SearchProcessor) : TypeResult()
   class ChangeMode(val mode: SessionMode) : TypeResult()
+  object RestartSearch : TypeResult()
   object EndSession : TypeResult()
 }

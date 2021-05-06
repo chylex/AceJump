@@ -17,7 +17,7 @@ import javax.swing.SwingUtilities
  * Holds all active tag markers and renders them on top of the editor.
  */
 internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListener {
-  private var markers: List<Tag>? = null
+  private var markers: Collection<TagMarker>? = null
   
   init {
     val contentComponent = editor.contentComponent
@@ -45,7 +45,7 @@ internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListen
     repaint()
   }
   
-  fun setMarkers(markers: List<Tag>) {
+  fun setMarkers(markers: Collection<TagMarker>) {
     this.markers = markers
     repaint()
   }
@@ -64,13 +64,14 @@ internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListen
     super.paintChildren(g)
     
     val markers = markers ?: return
+    
+    (g as Graphics2D).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+    
     val font = TagFont(editor)
     
     val cache = EditorOffsetCache.new()
     val viewRange = StandardBoundaries.VISIBLE_ON_SCREEN.getOffsetRange(editor, cache)
     val occupied = mutableListOf<Rectangle>()
-    
-    (g as Graphics2D).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     
     // If there is a tag at the caret location, prioritize its rendering over all other tags. This is helpful for seeing which tag is
     // currently selected while navigating highly clustered tags, although it does end up rearranging nearby tags which can be confusing.

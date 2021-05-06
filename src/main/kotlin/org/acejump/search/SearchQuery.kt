@@ -50,7 +50,7 @@ internal sealed class SearchQuery {
    */
   class RegularExpression(private val pattern: String) : SearchQuery() {
     override val rawText = ""
-  
+    
     override fun getHighlightLength(text: CharSequence, offset: Int): Int {
       return 1
     }

@@ -2,6 +2,7 @@ package org.acejump
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actions.EditorActionUtil
+import it.unimi.dsi.fastutil.ints.IntArrayList
 
 annotation class ExternalUsage
 
@@ -106,4 +107,14 @@ inline fun CharSequence.wordEndPlus(pos: Int, isPartOfWord: (Char) -> Boolean = 
   }
   
   return end
+}
+
+fun MutableMap<Editor, IntArrayList>.clone(): MutableMap<Editor, IntArrayList> {
+  val clone = HashMap<Editor, IntArrayList>(size)
+  
+  for ((editor, offsets) in this) {
+    clone[editor] = offsets.clone()
+  }
+  
+  return clone
 }

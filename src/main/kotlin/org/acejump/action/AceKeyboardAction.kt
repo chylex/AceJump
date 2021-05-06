@@ -2,6 +2,8 @@ package org.acejump.action
 
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys.EDITOR
+import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.DumbAwareAction
 import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries.*
@@ -18,7 +20,20 @@ abstract class AceKeyboardAction : DumbAwareAction() {
   }
   
   final override fun actionPerformed(e: AnActionEvent) {
-    invoke(SessionManager.start(e.getData(EDITOR) ?: return))
+    val editor = e.getData(EDITOR) ?: return
+    val project = e.project
+    
+    if (project != null) {
+      val openEditors = FileEditorManagerEx.getInstanceEx(project)
+        .splitters
+        .selectedEditors
+        .mapNotNull { (it as? TextEditor)?.editor }
+        .sortedBy { if (it === editor) 0 else 1 }
+      invoke(SessionManager.start(editor, openEditors))
+    }
+    else {
+      invoke(SessionManager.start(editor))
+    }
   }
   
   abstract operator fun invoke(session: Session)

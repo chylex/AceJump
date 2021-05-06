@@ -2,6 +2,7 @@ package org.acejump.modes
 
 import org.acejump.action.AceTagAction
 import org.acejump.config.AceConfig
+import org.acejump.search.Tag
 import org.acejump.session.SessionState
 import org.acejump.session.TypeResult
 
@@ -55,21 +56,21 @@ class AdvancedMode : SessionMode {
   override val caretColor
     get() = AceConfig.advancedModeColor
   
-  override fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult {
+  override fun type(state: SessionState, charTyped: Char, acceptedTag: Tag?): TypeResult {
     if (acceptedTag == null) {
       return state.type(charTyped)
     }
-  
+    
     val action = ALL_ACTION_MAP[charTyped.toUpperCase()]
     if (action != null) {
-      state.act(action, acceptedTag, charTyped.isUpperCase())
+      state.act(action, acceptedTag, shiftMode = charTyped.isUpperCase(), isFinal = true)
       return TypeResult.EndSession
     }
-  
+    
     return TypeResult.Nothing
   }
   
-  override fun accept(state: SessionState, acceptedTag: Int): Boolean {
+  override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
     return false
   }
   

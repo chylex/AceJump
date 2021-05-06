@@ -4,10 +4,11 @@ import com.intellij.openapi.editor.Editor
 import org.acejump.action.AceTagAction
 import org.acejump.boundaries.Boundaries
 import org.acejump.search.SearchProcessor
+import org.acejump.search.Tag
 import org.acejump.search.Tagger
 
 internal class SessionStateImpl(
-  override val editor: Editor,
+  private val jumpEditors: List<Editor>,
   private val tagger: Tagger,
   private val defaultBoundary: Boundaries,
   processor: SearchProcessor? = null
@@ -18,7 +19,7 @@ internal class SessionStateImpl(
     val processor = currentProcessor
     
     if (processor == null) {
-      val newProcessor = SearchProcessor.fromChar(editor, char, defaultBoundary)
+      val newProcessor = SearchProcessor.fromChar(jumpEditors, char, defaultBoundary)
       return TypeResult.UpdateResults(newProcessor.also { currentProcessor = it })
     }
     
@@ -29,7 +30,7 @@ internal class SessionStateImpl(
     return TypeResult.Nothing
   }
   
-  override fun act(action: AceTagAction, offset: Int, shiftMode: Boolean) {
-    currentProcessor?.let { action(editor, it, offset, shiftMode) }
+  override fun act(action: AceTagAction, tag: Tag, shiftMode: Boolean, isFinal: Boolean) {
+    currentProcessor?.let { action(tag.editor, it, tag.offset, shiftMode, isFinal) }
   }
 }

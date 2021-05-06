@@ -3,6 +3,7 @@ package org.acejump.modes
 import com.intellij.openapi.editor.CaretState
 import org.acejump.action.AceTagAction
 import org.acejump.config.AceConfig
+import org.acejump.search.Tag
 import org.acejump.session.SessionState
 import org.acejump.session.TypeResult
 
@@ -11,7 +12,7 @@ class BetweenPointsMode : SessionMode {
     private val TYPE_TAG_HINT = arrayOf(
       "<b>Type to Search...</b>"
     )
-  
+    
     private val ACTION_MODE_HINT = arrayOf(
       "<f>[S]</f>elect...",
       "<f>[D]</f>elete...",
@@ -34,7 +35,7 @@ class BetweenPointsMode : SessionMode {
   private var originalCarets: List<CaretState>? = null
   private var firstOffset: Int? = null
   
-  override fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult {
+  override fun type(state: SessionState, charTyped: Char, acceptedTag: Tag?): TypeResult {
     val actionMode = actionMode
     if (actionMode == null) {
       this.actionMode = ACTION_MODE_MAP[charTyped.toUpperCase()]
@@ -48,7 +49,7 @@ class BetweenPointsMode : SessionMode {
     if (firstOffset == null) {
       val selectAction = AdvancedMode.SELECT_ACTION_MAP[charTyped.toUpperCase()]
       if (selectAction != null) {
-        state.act(actionMode(selectAction), acceptedTag, shiftMode = charTyped.isUpperCase())
+        state.act(actionMode(selectAction), acceptedTag, shiftMode = charTyped.isUpperCase(), isFinal = true)
         return TypeResult.EndSession
       }
     }
@@ -60,21 +61,27 @@ class BetweenPointsMode : SessionMode {
     
     val firstOffset = firstOffset
     if (firstOffset == null) {
-      val caretModel = state.editor.caretModel
+      val caretModel = acceptedTag.editor.caretModel
       this.originalCarets = caretModel.caretsAndSelections
       
-      state.act(jumpAction, acceptedTag, shiftMode = false)
+      state.act(jumpAction, acceptedTag, shiftMode = false, isFinal = false)
       this.firstOffset = caretModel.offset
       return TypeResult.RestartSearch
     }
     
-    originalCarets?.let { state.editor.caretModel.caretsAndSelections = it }
-    state.act(actionMode(AceTagAction.SelectBetweenPoints(firstOffset, jumpAction)), acceptedTag, shiftMode = charTyped.isUpperCase())
+    originalCarets?.let { acceptedTag.editor.caretModel.caretsAndSelections = it }
+    
+    state.act(
+      actionMode(AceTagAction.SelectBetweenPoints(firstOffset, jumpAction)),
+      acceptedTag,
+      shiftMode = charTyped.isUpperCase(),
+      isFinal = true
+    )
     
     return TypeResult.EndSession
   }
   
-  override fun accept(state: SessionState, acceptedTag: Int): Boolean {
+  override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
     return false
   }
   

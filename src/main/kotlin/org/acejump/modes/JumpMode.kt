@@ -2,6 +2,7 @@ package org.acejump.modes
 
 import org.acejump.action.AceTagAction
 import org.acejump.config.AceConfig
+import org.acejump.search.Tag
 import org.acejump.session.SessionState
 import org.acejump.session.TypeResult
 
@@ -12,13 +13,13 @@ open class JumpMode : SessionMode {
   protected var wasUpperCase = false
     private set
   
-  override fun type(state: SessionState, charTyped: Char, acceptedTag: Int?): TypeResult {
+  override fun type(state: SessionState, charTyped: Char, acceptedTag: Tag?): TypeResult {
     wasUpperCase = charTyped.isUpperCase()
     return state.type(charTyped)
   }
   
-  override fun accept(state: SessionState, acceptedTag: Int): Boolean {
-    state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase)
+  override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
+    state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase, isFinal = true)
     return true
   }
   
