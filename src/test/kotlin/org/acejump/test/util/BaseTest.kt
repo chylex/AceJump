@@ -2,6 +2,7 @@ package org.acejump.test.util
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -38,7 +39,9 @@ abstract class BaseTest : BasePlatformTestCase() {
   fun takeAction(action: AnAction) = myFixture.testAction(action)
   
   fun makeEditor(contents: String): PsiFile {
-    return myFixture.configureByText(PlainTextFileType.INSTANCE, contents)
+    val file = myFixture.configureByText(PlainTextFileType.INSTANCE, contents)
+    (myFixture.editor as EditorImpl).scrollPane.viewport.setSize(1000, 100)
+    return file
   }
   
   fun resetEditor() {
@@ -52,10 +55,10 @@ abstract class BaseTest : BasePlatformTestCase() {
     UIUtil.dispatchAllInvocationEvents()
   }
   
-  fun String.executeQuery(query: String) {
+  private fun String.executeQuery(query: String) {
     myFixture.run {
       makeEditor(this@executeQuery)
-      testAction(AceKeyboardAction.ActivateAceJumpSpecial)
+      testAction(AceKeyboardAction.ActivateAceJump)
       typeAndWaitForResults(query)
     }
   }
