@@ -28,8 +28,14 @@ import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.codeStyle.CodeStyleManager
 import com.intellij.refactoring.actions.RefactoringQuickListPopupAction
 import com.intellij.refactoring.actions.RenameElementAction
-import org.acejump.*
+import org.acejump.countMatchingCharacters
+import org.acejump.humpEnd
+import org.acejump.humpStart
+import org.acejump.immutableText
+import org.acejump.isWordPart
 import org.acejump.search.SearchProcessor
+import org.acejump.wordEnd
+import org.acejump.wordStart
 import kotlin.math.max
 
 /**
@@ -334,36 +340,6 @@ sealed class AceTagAction {
   }
   
   /**
-   * On default action, selects a word according to [SelectWord], and then extends the selection in either or both directions based
-   * on the characters around the word. TODO
-   *
-   * On shift action, adds the new selection to existing selections.
-   */
-  object SelectAroundWord : BaseSelectAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      SelectWord(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
-      val text = editor.immutableText
-      var selectionStart = editor.selectionModel.selectionStart
-      var selectionEnd = editor.selectionModel.selectionEnd
-      val indentStart = EditorActionUtil.findFirstNonSpaceOffsetOnTheLine(editor.document, editor.caretModel.logicalPosition.line)
-      
-      while (selectionStart > 0 && selectionStart > indentStart && text[selectionStart - 1].let { it == ' ' || it == ',' }) {
-        --selectionStart
-      }
-      
-      while (selectionEnd < text.length && text[selectionEnd].let { it == ' ' || it == ',' }) {
-        ++selectionEnd
-      }
-      
-      if (selectionStart > 0 && text[selectionStart - 1] == '!') {
-        --selectionStart
-      }
-      
-      selectRange(editor, selectionStart, selectionEnd)
-    }
-  }
-  
-  /**
    * On default action, selects the line at the tag, excluding the indent.
    * On shift action, adds the new selection to existing selections.
    */
@@ -433,25 +409,6 @@ sealed class AceTagAction {
   }
   
   /**
-   * On default action, selects text based on the provided [selector] action, and deletes it without moving the existing carets.
-   * On shift action, moves caret to the position where deletion occurred.
-   */
-  class Delete(private val selector: AceTagAction) : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
-      val oldCarets = editor.caretModel.caretsAndSelections
-  
-      selector(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      WriteCommandAction.writeCommandAction(editor.project).withName("AceJump Delete").run<Throwable> {
-        editor.selectionModel.let { editor.document.deleteString(it.selectionStart, it.selectionEnd) }
-      }
-      
-      if (!shiftMode) {
-        editor.caretModel.caretsAndSelections = oldCarets
-      }
-    }
-  }
-  
-  /**
    * Selects text based on the provided [selector] action and clones it at every existing caret, selecting the cloned text. If a caret
    * has a selection, the selected text will be replaced.
    */
@@ -497,7 +454,7 @@ sealed class AceTagAction {
   object GoToDeclaration : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      performAction(if (shiftMode) GotoTypeDeclarationAction() else GotoDeclarationAction())
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) GotoTypeDeclarationAction() else GotoDeclarationAction()) }
     }
   }
   
@@ -509,7 +466,7 @@ sealed class AceTagAction {
   object ShowUsages : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      performAction(if (shiftMode) FindUsagesAction() else ShowUsagesAction())
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) FindUsagesAction() else ShowUsagesAction()) }
     }
   }
   
@@ -520,7 +477,7 @@ sealed class AceTagAction {
   object ShowIntentions : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      performAction(ShowIntentionActionsAction())
+      ApplicationManager.getApplication().invokeLater { performAction(ShowIntentionActionsAction()) }
     }
   }
   
@@ -532,12 +489,7 @@ sealed class AceTagAction {
   object Refactor : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      if (shiftMode) {
-        ApplicationManager.getApplication().invokeLater { performAction(RenameElementAction()) }
-      }
-      else {
-        performAction(RefactoringQuickListPopupAction())
-      }
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) RenameElementAction() else RefactoringQuickListPopupAction()) }
     }
   }
 }

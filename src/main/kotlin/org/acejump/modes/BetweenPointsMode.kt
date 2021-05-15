@@ -14,15 +14,11 @@ class BetweenPointsMode : SessionMode {
     )
     
     private val ACTION_MODE_HINT = arrayOf(
-      "<f>[S]</f>elect...",
-      "<f>[D]</f>elete...",
       "<f>[C]</f>lone to Caret...",
       "<f>[M]</f>ove to Caret..."
     )
     
     private val ACTION_MODE_MAP = mapOf(
-      'S' to ({ action: AceTagAction.BaseSelectAction -> action }),
-      'D' to (AceTagAction::Delete),
       'C' to (AceTagAction::CloneToCaret),
       'M' to (AceTagAction::MoveToCaret)
     )
