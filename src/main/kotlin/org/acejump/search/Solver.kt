@@ -10,7 +10,7 @@ import org.acejump.immutableText
 import org.acejump.input.KeyLayoutCache
 import org.acejump.isWordPart
 import org.acejump.wordEndPlus
-import java.util.*
+import java.util.IdentityHashMap
 import kotlin.math.max
 
 /*
@@ -54,7 +54,7 @@ internal class Solver private constructor(
   private val editorPriority: List<Editor>,
   private val queryLength: Int,
   private val newResults: Map<Editor, IntList>,
-  private val allResults: Map<Editor, IntList>
+  private val allResults: Map<Editor, IntList>,
 ) {
   companion object {
     fun solve(
@@ -63,7 +63,7 @@ internal class Solver private constructor(
       newResults: Map<Editor, IntList>,
       allResults: Map<Editor, IntList>,
       tags: List<String>,
-      caches: Map<Editor, EditorOffsetCache>
+      caches: Map<Editor, EditorOffsetCache>,
     ): Map<String, Tag> {
       return Solver(editorPriority, max(1, query.rawText.length), newResults, allResults).map(tags, caches)
     }
@@ -74,24 +74,26 @@ internal class Solver private constructor(
   
   private var allWordFragments = HashSet<String>(allResults.values.sumBy(IntList::size)).apply {
     for ((editor, offsets) in allResults) {
+      val chars = editor.immutableText
       val iter = offsets.iterator()
       while (iter.hasNext()) {
-        forEachWordFragment(editor, iter.nextInt()) { add(it) }
+        forEachWordFragment(chars, iter.nextInt(), this::add)
       }
     }
   }
   
-  fun map(availableTags: List<String>, caches: Map<Editor, EditorOffsetCache>): Map<String, Tag> {
+  private fun generateEligibleSites(availableTags: List<String>): Map<String, MutableList<Tag>> {
     val eligibleSitesByTag = HashMap<String, MutableList<Tag>>(100)
     val tagsByFirstLetter = availableTags.groupBy { it[0] }
     
     for ((editor, offsets) in newResults) {
+      val chars = editor.immutableText
       val iter = offsets.iterator()
       while (iter.hasNext()) {
         val site = iter.nextInt()
         
         for ((firstLetter, tags) in tagsByFirstLetter.entries) {
-          if (canTagBeginWithChar(editor, site, firstLetter)) {
+          if (canTagBeginWithChar(chars, site, firstLetter)) {
             for (tag in tags) {
               eligibleSitesByTag.getOrPut(tag, ::mutableListOf).add(Tag(editor, site))
             }
@@ -100,22 +102,38 @@ internal class Solver private constructor(
       }
     }
     
-    val matchingSites = HashMap<MutableList<Tag>, MutableList<Tag>>()
-    val matchingSitesAsArrays = IdentityHashMap<String, MutableList<Tag>>() // Keys are guaranteed to be from a single collection.
+    return eligibleSitesByTag
+  }
+  
+  private fun generateMatchingSites(
+    eligibleSites: Map<String, MutableList<Tag>>,
+    caches: Map<Editor, EditorOffsetCache>,
+  ): Map<String, Iterator<Tag>> {
+    val matchingSites = HashMap<MutableList<Tag>, Iterator<Tag>>()
+    val matchingSitesSorted = IdentityHashMap<String, Iterator<Tag>>() // Keys are guaranteed to be from a single collection.
     
     val siteOrder = siteOrder(caches)
+    
+    for ((mark, tags) in eligibleSites.entries) {
+      matchingSitesSorted[mark] = matchingSites.getOrPut(tags) {
+        @Suppress("ConvertLambdaToReference")
+        tags.toMutableList().apply { sortWith(siteOrder) }.iterator()
+      }
+    }
+    
+    return matchingSitesSorted
+  }
+  
+  fun map(availableTags: List<String>, caches: Map<Editor, EditorOffsetCache>): Map<String, Tag> {
+    val eligibleSitesByTag = generateEligibleSites(availableTags)
+    val matchingSitesSorted = generateMatchingSites(eligibleSitesByTag, caches)
+    
     val tagOrder = KeyLayoutCache.tagOrder
       .thenComparingInt { eligibleSitesByTag.getValue(it).size }
       .thenBy(AceConfig.layout.priority(String::last))
     
     val sortedTags = eligibleSitesByTag.keys.toMutableList().apply {
       sortWith(tagOrder)
-    }
-    
-    for ((mark, tags) in eligibleSitesByTag.entries) {
-      matchingSitesAsArrays[mark] = matchingSites.getOrPut(tags) {
-        tags.toMutableList().apply { sortWith(siteOrder) }
-      }
     }
     
     var totalAssigned = 0
@@ -126,7 +144,7 @@ internal class Solver private constructor(
         break
       }
       
-      if (tryToAssignTag(tag, matchingSitesAsArrays.getValue(tag))) {
+      if (tryToAssignTag(tag, matchingSitesSorted.getValue(tag))) {
         totalAssigned++
       }
     }
@@ -134,17 +152,23 @@ internal class Solver private constructor(
     return newTags
   }
   
-  private fun tryToAssignTag(mark: String, tags: List<Tag>): Boolean {
+  private fun tryToAssignTag(mark: String, tags: Iterator<Tag>): Boolean {
     if (newTags.containsKey(mark)) {
       return false
     }
     
-    val tag = tags.firstOrNull { it.offset !in newTagIndices.getValue(it.editor) } ?: return false
+    while (tags.hasNext()) {
+      val tag = tags.next()
+      val assigned = newTagIndices.getValue(tag.editor)
+      
+      if (tag.offset !in assigned) {
+        newTags[mark] = tag
+        assigned.add(tag.offset)
+        return true
+      }
+    }
     
-    @Suppress("ReplacePutWithAssignment")
-    newTags.put(mark, tag)
-    newTagIndices.getValue(tag.editor).add(tag.offset)
-    return true
+    return false
   }
   
   private fun siteOrder(caches: Map<Editor, EditorOffsetCache>) = Comparator<Tag> { a, b ->
@@ -179,12 +203,12 @@ internal class Solver private constructor(
     }
   }
   
-  private fun canTagBeginWithChar(editor: Editor, site: Int, char: Char): Boolean {
+  private fun canTagBeginWithChar(chars: CharSequence, site: Int, char: Char): Boolean {
     if (char.toString() in allWordFragments) {
       return false
     }
     
-    forEachWordFragment(editor, site) {
+    forEachWordFragment(chars, site) {
       if (it + char in allWordFragments) {
         return false
       }
@@ -193,8 +217,7 @@ internal class Solver private constructor(
     return true
   }
   
-  private inline fun forEachWordFragment(editor: Editor, site: Int, callback: (String) -> Unit) {
-    val chars = editor.immutableText
+  private inline fun forEachWordFragment(chars: CharSequence, site: Int, callback: (String) -> Unit) {
     val left = max(0, site + queryLength - 1)
     val right = chars.wordEndPlus(site)
     

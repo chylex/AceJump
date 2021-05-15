@@ -82,7 +82,7 @@ class Tagger(private val editors: List<Editor>) {
    * Assigns as many unassigned tags as possible, and merges them with the existing compatible tags.
    */
   private fun assignTagsAndMerge(
-    results: Map<Editor, IntList>, availableTags: List<String>, query: SearchQuery, queryText: String
+    results: Map<Editor, IntList>, availableTags: List<String>, query: SearchQuery, queryText: String,
   ): HashBiMap<String, Tag> {
     val caches = results.keys.associateWith { EditorOffsetCache.new() }
     
@@ -134,12 +134,10 @@ class Tagger(private val editors: List<Editor>) {
     allAssignedTags.putAll(oldCompatibleTags)
     allAssignedTags.putAll(Solver.solve(editors, query, vacantResults, results, availableTags, caches))
     
+    val assignedMarkers = allAssignedTags.keys.groupBy { it[0] }
+    
     return allAssignedTags.mapKeysTo(HashBiMap.create(allAssignedTags.size)) { (tag, _) ->
-      // Avoid matching query - will trigger a jump.
-      // TODO: lift this constraint.
-      val queryEndsWith = queryText.endsWith(tag[0]) || queryText.endsWith(tag)
-      
-      if (!queryEndsWith && canShortenTag(tag, allAssignedTags.keys))
+      if (canShortenTag(tag, assignedMarkers, queryText))
         tag[0].toString()
       else
         tag
@@ -220,14 +218,16 @@ class Tagger(private val editors: List<Editor>) {
       else                                 -> ""
     }
     
-    private fun canShortenTag(marker: String, markers: Collection<String>): Boolean {
-      for (other in markers) {
-        if (marker != other && marker[0] == other[0]) {
-          return false
-        }
+    private fun canShortenTag(marker: String, markers: Map<Char, List<String>>, queryText: String): Boolean {
+      // Avoid matching query - will trigger a jump.
+      // TODO: lift this constraint.
+      val queryEndsWith = queryText.endsWith(marker[0]) || queryText.endsWith(marker)
+      if (queryEndsWith) {
+        return false
       }
       
-      return true
+      val startingWithSameLetter = markers[marker[0]]
+      return startingWithSameLetter == null || startingWithSameLetter.singleOrNull() == marker
     }
   }
 }

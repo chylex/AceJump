@@ -2,11 +2,9 @@ package org.acejump.view
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.ui.ColorUtil
 import com.intellij.ui.scale.JBUIScale
 import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries
-import org.acejump.config.AceConfig
 import org.acejump.countMatchingCharacters
 import org.acejump.immutableText
 import java.awt.Color
@@ -34,6 +32,8 @@ internal class TagMarker(
      * TODO This might be due to DPI settings.
      */
     private val HIGHLIGHT_OFFSET = if (SystemInfo.isMac) -0.5 else 0.0
+    
+    private val SHADOW_COLOR = Color(0F, 0F, 0F, 0.35F)
     
     /**
      * Creates a new tag, precomputing some information about the nearby characters to reduce rendering overhead. If the last typed
@@ -71,12 +71,12 @@ internal class TagMarker(
       
       g.font = font.tagFont
       
-      if (!ColorUtil.isDark(AceConfig.tagForegroundColor)) {
-        g.color = Color(0F, 0F, 0F, 0.35F)
+      if (!font.isForegroundDark) {
+        g.color = SHADOW_COLOR
         g.drawString(text, x + 1, y + 1)
       }
       
-      g.color = AceConfig.tagForegroundColor
+      g.color = font.foregroundColor
       g.drawString(text, x, y)
     }
   }
@@ -96,7 +96,7 @@ internal class TagMarker(
   fun paint(g: Graphics2D, editor: Editor, cache: EditorOffsetCache, font: TagFont, occupied: MutableList<Rectangle>): Rectangle? {
     val rect = alignTag(editor, cache, font, occupied) ?: return null
     
-    drawHighlight(g, rect, AceConfig.tagBackgroundColor)
+    drawHighlight(g, rect, font.backgroundColor)
     drawForeground(g, font, rect.location, tag)
     
     occupied.add(JBUIScale.scale(2).let { Rectangle(rect.x - it, rect.y, rect.width + (2 * it), rect.height) })

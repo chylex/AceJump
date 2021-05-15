@@ -38,7 +38,7 @@ fun CharSequence.countMatchingCharacters(selfOffset: Int, otherText: String): In
  * Determines which characters form a "word" for the purposes of functions below.
  */
 val Char.isWordPart
-  get() = this.isJavaIdentifierPart()
+  get() = this in 'a'..'z' || this.isJavaIdentifierPart()
 
 /**
  * Finds index of the first character in a word.
@@ -58,8 +58,9 @@ inline fun CharSequence.wordStart(pos: Int, isPartOfWord: (Char) -> Boolean = Ch
  */
 inline fun CharSequence.wordEnd(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
   var end = pos
+  val limit = length - 1
   
-  while (end < length - 1 && isPartOfWord(this[end + 1])) {
+  while (end < limit && isPartOfWord(this[end + 1])) {
     ++end
   }
   
@@ -97,12 +98,13 @@ inline fun CharSequence.humpEnd(pos: Int, isPartOfWord: (Char) -> Boolean = Char
  */
 inline fun CharSequence.wordEndPlus(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
   var end = this.wordEnd(pos, isPartOfWord)
+  val limit = length - 1
   
-  while (end < length - 1 && !isPartOfWord(this[end + 1])) {
+  while (end < limit && !isPartOfWord(this[end + 1])) {
     ++end
   }
   
-  if (end < length - 1 && isPartOfWord(this[end + 1])) {
+  if (end < limit && isPartOfWord(this[end + 1])) {
     ++end
   }
   
