@@ -1,12 +1,7 @@
 package org.acejump.action
 
-import com.intellij.codeInsight.intention.actions.ShowIntentionActionsAction
-import com.intellij.codeInsight.navigation.actions.GotoDeclarationAction
-import com.intellij.codeInsight.navigation.actions.GotoTypeDeclarationAction
-import com.intellij.find.actions.FindUsagesAction
 import com.intellij.find.actions.ShowUsagesAction
 import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
@@ -26,16 +21,8 @@ import com.intellij.openapi.ui.playback.commands.ActionCommand
 import com.intellij.openapi.util.TextRange
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.codeStyle.CodeStyleManager
-import com.intellij.refactoring.actions.RefactoringQuickListPopupAction
-import com.intellij.refactoring.actions.RenameElementAction
-import org.acejump.countMatchingCharacters
-import org.acejump.humpEnd
-import org.acejump.humpStart
-import org.acejump.immutableText
-import org.acejump.isWordPart
+import org.acejump.*
 import org.acejump.search.SearchProcessor
-import org.acejump.wordEnd
-import org.acejump.wordStart
 import kotlin.math.max
 
 /**
@@ -171,8 +158,12 @@ sealed class AceTagAction {
       caretModel.moveToOffset(cursorOffset)
     }
     
-    fun performAction(action: AnAction) {
-      ActionManager.getInstance().tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
+    fun performAction(actionName: String) {
+      val actionManager = ActionManager.getInstance()
+      val action = actionManager.getAction(actionName)
+      if (action != null) {
+        actionManager.tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
+      }
     }
     
     fun ensureEditorFocused(editor: Editor) {
@@ -366,10 +357,8 @@ sealed class AceTagAction {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
       JumpToSearchEnd(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
       
-      val action = ActionManager.getInstance().getAction(IdeActions.ACTION_EDITOR_SELECT_WORD_AT_CARET)
-      
       repeat(extendCount) {
-        performAction(action)
+        performAction(IdeActions.ACTION_EDITOR_SELECT_WORD_AT_CARET)
       }
     }
   }
@@ -454,7 +443,7 @@ sealed class AceTagAction {
   object GoToDeclaration : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) GotoTypeDeclarationAction() else GotoDeclarationAction()) }
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) IdeActions.ACTION_GOTO_TYPE_DECLARATION else IdeActions.ACTION_GOTO_DECLARATION) }
     }
   }
   
@@ -466,7 +455,7 @@ sealed class AceTagAction {
   object ShowUsages : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) FindUsagesAction() else ShowUsagesAction()) }
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) IdeActions.ACTION_FIND_USAGES else ShowUsagesAction.ID) }
     }
   }
   
@@ -477,7 +466,7 @@ sealed class AceTagAction {
   object ShowIntentions : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      ApplicationManager.getApplication().invokeLater { performAction(ShowIntentionActionsAction()) }
+      ApplicationManager.getApplication().invokeLater { performAction(IdeActions.ACTION_SHOW_INTENTION_ACTIONS) }
     }
   }
   
@@ -489,7 +478,7 @@ sealed class AceTagAction {
   object Refactor : AceTagAction() {
     override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
       JumpToWordStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
-      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) RenameElementAction() else RefactoringQuickListPopupAction()) }
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) IdeActions.ACTION_RENAME else "Refactorings.QuickListPopupAction") }
     }
   }
 }
