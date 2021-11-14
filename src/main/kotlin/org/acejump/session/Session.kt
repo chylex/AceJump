@@ -173,9 +173,8 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
     tagger = Tagger(jumpEditors)
     tagCanvases.values.forEach { it.setMarkers(emptyList()) }
     
-    val processor = SearchProcessor.fromRegex(jumpEditors, pattern.regex, defaultBoundary).also {
-      state = SessionStateImpl(jumpEditors, tagger, defaultBoundary, it)
-    }
+    val processor = SearchProcessor.fromRegex(jumpEditors, pattern.regex, defaultBoundary)
+    state = SessionStateImpl(jumpEditors, tagger, defaultBoundary, processor)
     
     updateSearch(processor, markImmediately = true)
   }

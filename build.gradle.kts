@@ -14,11 +14,12 @@ intellij {
   version.set("2022.1.2")
   updateSinceUntilBuild.set(false)
   pluginsRepositories.custom("https://intellij.chylex.com")
-  plugins.add("IdeaVIM:chylex-11")
+  plugins.add("IdeaVIM:chylex-12")
 }
 
 tasks.withType<KotlinCompile> {
   kotlinOptions.jvmTarget = "11"
+  kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all")
 }
 
 group = "org.acejump"

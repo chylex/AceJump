@@ -51,5 +51,18 @@ enum class StandardBoundaries : Boundaries {
     override fun isOffsetInside(editor: Editor, offset: Int, cache: EditorOffsetCache): Boolean {
       return offset > editor.caretModel.offset
     }
+  },
+  
+  CARET_LINE {
+    override fun getOffsetRange(editor: Editor, cache: EditorOffsetCache): IntRange {
+      val document = editor.document
+      val offset = editor.caretModel.offset
+      val line = document.getLineNumber(offset)
+      return document.getLineStartOffset(line)..document.getLineEndOffset(line)
+    }
+  
+    override fun isOffsetInside(editor: Editor, offset: Int, cache: EditorOffsetCache): Boolean {
+      return offset in getOffsetRange(editor, cache)
+    }
   }
 }

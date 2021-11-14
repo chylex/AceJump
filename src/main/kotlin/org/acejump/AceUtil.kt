@@ -2,6 +2,10 @@ package org.acejump
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actions.EditorActionUtil
+import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
+import com.intellij.openapi.project.Project
+import com.intellij.util.IncorrectOperationException
 import it.unimi.dsi.fastutil.ints.IntArrayList
 
 annotation class ExternalUsage
@@ -11,6 +15,21 @@ annotation class ExternalUsage
  */
 val Editor.immutableText
   get() = this.document.immutableCharSequence
+
+/**
+ * Returns all open editors in the project.
+ */
+val Project.openEditors: List<Editor>
+  get() {
+    return try {
+      FileEditorManagerEx.getInstanceEx(this)
+        .splitters
+        .selectedEditors
+        .mapNotNull { (it as? TextEditor)?.editor }
+    } catch (e: IncorrectOperationException) {
+      emptyList()
+    }
+  }
 
 /**
  * Returns true if [this] contains [otherText] at the specified offset.
