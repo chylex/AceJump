@@ -13,12 +13,6 @@ data class AceSettings(
   @OptionTag("jumpModeRGB", converter = ColorConverter::class)
   var jumpModeColor: Color = Color(0xFFFFFF),
   
-  @OptionTag("advancedModeRGB", converter = ColorConverter::class)
-  var advancedModeColor: Color = Color(0xFFB700),
-  
-  @OptionTag("betweenPointsModeRGB", converter = ColorConverter::class)
-  var betweenPointsModeColor: Color = Color(0x6FC5FF),
-  
   @OptionTag("textHighlightRGB", converter = ColorConverter::class)
   var textHighlightColor: Color = Color(0x394B58),
   

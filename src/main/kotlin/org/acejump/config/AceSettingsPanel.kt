@@ -27,8 +27,6 @@ internal class AceSettingsPanel {
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
   private val jumpModeColorWheel = ColorPanel()
-  private val advancedModeColorWheel = ColorPanel()
-  private val betweenPointsModeColorWheel = ColorPanel()
   private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
   private val tagBackgroundColorWheel = ColorPanel()
@@ -55,9 +53,7 @@ internal class AceSettingsPanel {
     }
     
     titledRow("Colors") {
-      row("Jump mode caret background:") { short(jumpModeColorWheel) }
-      row("Advanced mode caret background:") { short(advancedModeColorWheel) }
-      row("Between Points mode caret background:") { short(betweenPointsModeColorWheel) }
+      row("Caret background:") { short(jumpModeColorWheel) }
       row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
       row("Tag background:") { short(tagBackgroundColorWheel) }
@@ -71,8 +67,6 @@ internal class AceSettingsPanel {
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
   internal var jumpModeColor by jumpModeColorWheel
-  internal var advancedModeColor by advancedModeColorWheel
-  internal var betweenPointsModeColor by betweenPointsModeColorWheel
   internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
   internal var tagBackgroundColor by tagBackgroundColorWheel
@@ -87,8 +81,6 @@ internal class AceSettingsPanel {
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
     jumpModeColor = settings.jumpModeColor
-    advancedModeColor = settings.advancedModeColor
-    betweenPointsModeColor = settings.betweenPointsModeColor
     textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
     tagBackgroundColor = settings.tagBackgroundColor

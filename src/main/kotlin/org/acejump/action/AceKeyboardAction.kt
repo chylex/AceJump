@@ -60,13 +60,6 @@ abstract class AceKeyboardAction : DumbAwareAction() {
     override fun invoke(session: Session) = session.startJumpMode()
   }
   
-  /**
-   * Starts or cycles main AceJump modes.
-   */
-  object ActivateAceJumpSpecial : AceKeyboardAction() {
-    override fun invoke(session: Session) = session.startOrCycleSpecialModes()
-  }
-  
   // @formatter:off
   
   object StartAllWordsMode          : BaseRegexSearchAction(Pattern.ALL_WORDS, VISIBLE_ON_SCREEN)
@@ -75,7 +68,6 @@ abstract class AceKeyboardAction : DumbAwareAction() {
   object StartAllLineStartsMode     : BaseRegexSearchAction(Pattern.LINE_STARTS, VISIBLE_ON_SCREEN)
   object StartAllLineEndsMode       : BaseRegexSearchAction(Pattern.LINE_ENDS, VISIBLE_ON_SCREEN)
   object StartAllLineIndentsMode    : BaseRegexSearchAction(Pattern.LINE_INDENTS, VISIBLE_ON_SCREEN)
-  object StartAllLineMarksMode      : BaseRegexSearchAction(Pattern.LINE_ALL_MARKS, VISIBLE_ON_SCREEN)
   
   // @formatter:on
 }

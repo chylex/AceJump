@@ -16,8 +16,6 @@ class AceConfigurable : Configurable {
       panel.keyboardLayout != settings.layout ||
       panel.minQueryLengthInt != settings.minQueryLength ||
       panel.jumpModeColor != settings.jumpModeColor ||
-      panel.advancedModeColor != settings.advancedModeColor ||
-      panel.betweenPointsModeColor != settings.betweenPointsModeColor ||
       panel.textHighlightColor != settings.textHighlightColor ||
       panel.tagForegroundColor != settings.tagForegroundColor ||
       panel.tagBackgroundColor != settings.tagBackgroundColor ||
@@ -28,8 +26,6 @@ class AceConfigurable : Configurable {
     settings.layout = panel.keyboardLayout
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
-    panel.advancedModeColor?.let { settings.advancedModeColor = it }
-    panel.betweenPointsModeColor?.let { settings.betweenPointsModeColor = it }
     panel.textHighlightColor?.let { settings.textHighlightColor = it }
     panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
     panel.tagBackgroundColor?.let { settings.tagBackgroundColor = it }

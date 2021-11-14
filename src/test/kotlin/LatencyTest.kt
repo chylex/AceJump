@@ -15,7 +15,7 @@ class LatencyTest : BaseTest() {
       
       for (query in chars) {
         makeEditor(editorText)
-        myFixture.testAction(AceKeyboardAction.ActivateAceJumpSpecial)
+        myFixture.testAction(AceKeyboardAction.ActivateAceJump)
         time += measureTimeMillis { typeAndWaitForResults("$query") }
         // TODO assert(Tagger.markers.isNotEmpty()) { "Should be tagged: $query" }
         resetEditor()

@@ -62,12 +62,4 @@ class AceTest : BaseTest() {
 
     myFixture.checkResult("test <caret>word action")
   }
-
-  fun `test line mode`() {
-    makeEditor("    test\n    three\n    lines\n")
-
-    takeAction(AceKeyboardAction.StartAllLineMarksMode)
-
-    assertEquals(9, session.tags.size)
-  }
 }

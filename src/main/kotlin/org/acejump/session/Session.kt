@@ -15,11 +15,8 @@ import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries
 import org.acejump.clone
 import org.acejump.config.AceConfig
-import org.acejump.immutableText
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
-import org.acejump.modes.AdvancedMode
-import org.acejump.modes.BetweenPointsMode
 import org.acejump.modes.JumpMode
 import org.acejump.modes.SessionMode
 import org.acejump.search.*
@@ -165,22 +162,6 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
     state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
   }
   
-  fun startOrCycleSpecialModes() {
-    if (!this::mode.isInitialized) {
-      setMode(AdvancedMode())
-      state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
-      return
-    }
-    
-    restart()
-    setMode(when (mode) {
-      is AdvancedMode -> BetweenPointsMode()
-      else            -> AdvancedMode()
-    })
-    
-    state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
-  }
-  
   /**
    * Starts a regular expression search. If a search was already active, it will be reset alongside its tags and highlights.
    */
@@ -205,15 +186,6 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
     
     if (processor != null) {
       updateSearch(processor, markImmediately = true)
-    }
-    else if (mode is AdvancedMode) {
-      val offset = mainEditor.caretModel.offset
-      val result = mainEditor.immutableText.getOrNull(offset)?.let(state::type)
-      if (result is TypeResult.UpdateResults) {
-        val tag = Tag(mainEditor, offset).also { acceptedTag = it }
-        textHighlighter.renderFinal(tag, result.processor.query)
-        updateHint()
-      }
     }
   }
   

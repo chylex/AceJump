@@ -4,7 +4,6 @@ import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler
-import org.acejump.search.Pattern
 import org.acejump.session.Session
 import org.acejump.session.SessionManager
 
@@ -41,17 +40,5 @@ abstract class AceEditorAction(private val originalHandler: EditorActionHandler)
   
   class TagImmediately(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
     override fun run(session: Session) = session.tagImmediately()
-  }
-  
-  class SearchLineStarts(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_STARTS)
-  }
-  
-  class SearchLineEnds(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_ENDS)
-  }
-  
-  class SearchLineIndents(originalHandler: EditorActionHandler) : AceEditorAction(originalHandler) {
-    override fun run(session: Session) = session.startRegexSearch(Pattern.LINE_INDENTS)
   }
 }
