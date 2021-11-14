@@ -1,31 +1,24 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  idea apply true
-  kotlin("jvm") version "1.5.0"
-  id("org.jetbrains.intellij") version "0.7.2"
-}
-
-tasks {
-  withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
-  }
-}
-
-dependencies {
-  compileOnly(kotlin("stdlib-jdk8"))
+  idea
+  kotlin("jvm") version "1.5.10"
+  id("org.jetbrains.intellij") version "1.6.0"
 }
 
 repositories {
   mavenCentral()
-  jcenter()
 }
 
 intellij {
-  version = "2021.1"
-  pluginName = "AceJump"
-  updateSinceUntilBuild = false
-  setPlugins("java", "IdeaVIM:0.66")
+  version.set("2022.1.2")
+  updateSinceUntilBuild.set(false)
+  pluginsRepositories.custom("https://intellij.chylex.com")
+  plugins.add("IdeaVIM:chylex-11")
+}
+
+tasks.withType<KotlinCompile> {
+  kotlinOptions.jvmTarget = "11"
 }
 
 group = "org.acejump"
