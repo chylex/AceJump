@@ -1,7 +1,6 @@
 package org.acejump
 
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.actions.EditorActionUtil
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.project.Project
@@ -80,32 +79,6 @@ inline fun CharSequence.wordEnd(pos: Int, isPartOfWord: (Char) -> Boolean = Char
   val limit = length - 1
   
   while (end < limit && isPartOfWord(this[end + 1])) {
-    ++end
-  }
-  
-  return end
-}
-
-/**
- * Finds index of the previous "camelHumps" hump in a word.
- */
-inline fun CharSequence.humpStart(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
-  var start = pos
-  
-  while (start > 0 && isPartOfWord(this[start - 1]) && !EditorActionUtil.isHumpBound(this, start, true)) {
-    --start
-  }
-  
-  return start
-}
-
-/**
- * Finds index of the next "camelHumps" hump in a word.
- */
-inline fun CharSequence.humpEnd(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
-  var end = pos
-  
-  while (end < length - 1 && isPartOfWord(this[end + 1]) && !EditorActionUtil.isHumpBound(this, end + 1, false)) {
     ++end
   }
   

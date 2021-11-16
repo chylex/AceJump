@@ -6,10 +6,8 @@ import com.intellij.openapi.actionSystem.IdeActions
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.UndoConfirmationPolicy
-import com.intellij.openapi.editor.CaretState
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.LogicalPosition
 import com.intellij.openapi.editor.actionSystem.DocCommandGroupId
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
@@ -61,33 +59,6 @@ sealed class AceTagAction {
     abstract fun getCaretOffset(editor: Editor, queryStartOffset: Int, queryEndOffset: Int, isInsideWord: Boolean): Int
   }
   
-  abstract class BaseSelectAction : AceTagAction() {
-    final override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
-      if (shiftMode) {
-        val caretModel = editor.caretModel
-        val oldCarets = caretModel.caretsAndSelections
-        val oldOffsetPosition = caretModel.logicalPosition
-        
-        invoke(editor, searchProcessor, offset)
-        
-        if (caretModel.caretsAndSelections.any { isSelectionOverlapping(oldOffsetPosition, it) }) {
-          oldCarets.removeAll { isSelectionOverlapping(oldOffsetPosition, it) }
-        }
-        
-        caretModel.caretsAndSelections = oldCarets + caretModel.caretsAndSelections
-      }
-      else {
-        invoke(editor, searchProcessor, offset)
-      }
-    }
-    
-    private fun isSelectionOverlapping(offset: LogicalPosition, oldCaret: CaretState): Boolean {
-      return oldCaret.caretPosition == offset || oldCaret.selectionStart == offset || oldCaret.selectionEnd == offset
-    }
-    
-    protected abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int)
-  }
-  
   private companion object {
     fun countMatchingCharacters(editor: Editor, searchProcessor: SearchProcessor, offset: Int): Int {
       return editor.immutableText.countMatchingCharacters(offset, searchProcessor.query.rawText)
@@ -102,13 +73,7 @@ sealed class AceTagAction {
       caretModel.removeSecondaryCarets()
       caretModel.moveToOffset(offset)
     }
-    
-    fun selectRange(editor: Editor, fromOffset: Int, toOffset: Int, cursorOffset: Int = toOffset) = with(editor) {
-      selectionModel.removeSelection(true)
-      selectionModel.setSelection(fromOffset, toOffset)
-      caretModel.moveToOffset(cursorOffset)
-    }
-    
+  
     fun performAction(actionName: String) {
       val actionManager = ActionManager.getInstance()
       val action = actionManager.getAction(actionName)
@@ -163,29 +128,6 @@ sealed class AceTagAction {
         editor.immutableText.wordStart(queryEndOffset)
       else
         queryStartOffset
-    }
-  }
-  
-  /**
-   * On default action, selects the range between the caret and a position decided by the provided [BaseJumpAction].
-   * On shift action, adds the new selection to existing selections.
-   */
-  class SelectToCaret(private val jumper: BaseJumpAction) : BaseSelectAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int) {
-      val caretModel = editor.caretModel
-      val oldOffset = caretModel.offset
-      val oldSelection = editor.selectionModel.takeIf { it.hasSelection(false) }?.let { it.selectionStart..it.selectionEnd }
-  
-      jumper(editor, searchProcessor, offset, shiftMode = false, isFinal = true)
-      
-      val newOffset = caretModel.offset
-      
-      if (oldSelection == null) {
-        selectRange(editor, oldOffset, newOffset)
-      }
-      else {
-        selectRange(editor, minOf(oldOffset, newOffset, oldSelection.first), maxOf(oldOffset, newOffset, oldSelection.last), newOffset)
-      }
     }
   }
   

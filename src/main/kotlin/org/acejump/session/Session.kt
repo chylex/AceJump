@@ -1,15 +1,12 @@
 package org.acejump.session
 
-import com.intellij.codeInsight.hint.HintManager
 import com.intellij.codeInsight.hint.HintManagerImpl
-import com.intellij.codeInsight.hint.HintUtil
 import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ScrollType
 import com.intellij.openapi.editor.actionSystem.TypedActionHandler
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.impl.AbstractColorsScheme
-import com.intellij.ui.LightweightHint
 import org.acejump.ExternalUsage
 import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries
@@ -65,13 +62,12 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
         editorSettings.stopEditing(editor)
         
         when (result) {
-          TypeResult.Nothing          -> updateHint()
+          TypeResult.Nothing          -> return;
           is TypeResult.UpdateResults -> updateSearch(result.processor, markImmediately = hadTags)
           is TypeResult.ChangeMode    -> setMode(result.mode)
           
           TypeResult.RestartSearch    -> restart().also {
             this@Session.state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
-            updateHint()
           }
           
           TypeResult.EndSession       -> end()
@@ -111,37 +107,11 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
         textHighlighter.renderOccurrences(results, query)
       }
     }
-    
-    updateHint()
   }
   
   private fun setMode(mode: SessionMode) {
     this.mode = mode
     mainEditor.colorsScheme.setColor(EditorColors.CARET_COLOR, mode.caretColor)
-    updateHint()
-  }
-  
-  private fun updateHint() {
-    val acceptedTag = acceptedTag
-    val editor = mainEditor
-    val offset = when {
-      acceptedTag == null           -> null
-      acceptedTag.editor === editor -> acceptedTag.offset
-      else                          -> mainEditor.caretModel.offset
-    }
-    
-    val hintArray = mode.getHint(offset, state?.currentProcessor.let { it != null && it.query.rawText.isNotEmpty() }) ?: return
-    val hintText = hintArray
-      .joinToString("\n")
-      .replace("<f>", "<span style=\"font-family:'${editor.colorsScheme.editorFontName}';font-weight:bold\">")
-      .replace("</f>", "</span>")
-    
-    val hint = LightweightHint(HintUtil.createInformationLabel(hintText))
-    val pos = offset?.let(editor::offsetToLogicalPosition) ?: editor.caretModel.logicalPosition
-    val point = HintManagerImpl.getHintPosition(hint, editor, pos, HintManager.ABOVE)
-    val info = HintManagerImpl.createHintHint(editor, point, hint, HintManager.ABOVE).setShowImmediately(true)
-    val flags = HintManager.UPDATE_BY_SCROLLING or HintManager.HIDE_BY_ESCAPE
-    HintManagerImpl.getInstanceImpl().showEditorHint(hint, editor, point, flags, 0, true, info)
   }
   
   fun startJumpMode() {

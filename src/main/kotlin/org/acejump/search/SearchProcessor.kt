@@ -3,7 +3,6 @@ package org.acejump.search
 import com.intellij.openapi.editor.Editor
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import org.acejump.boundaries.Boundaries
-import org.acejump.clone
 import org.acejump.immutableText
 import org.acejump.isWordPart
 import org.acejump.matchesAt
@@ -11,9 +10,7 @@ import org.acejump.matchesAt
 /**
  * Searches editor text for matches of a [SearchQuery], and updates previous results when the user [type]s a character.
  */
-class SearchProcessor private constructor(
-  private val editors: List<Editor>, query: SearchQuery, results: MutableMap<Editor, IntArrayList>
-) {
+class SearchProcessor private constructor(query: SearchQuery, results: MutableMap<Editor, IntArrayList>) {
   companion object {
     fun fromChar(editors: List<Editor>, char: Char, boundaries: Boundaries): SearchProcessor {
       return SearchProcessor(editors, SearchQuery.Literal(char.toString()), boundaries)
@@ -24,7 +21,7 @@ class SearchProcessor private constructor(
     }
   }
   
-  private constructor(editors: List<Editor>, query: SearchQuery, boundaries: Boundaries) : this(editors, query, mutableMapOf()) {
+  private constructor(editors: List<Editor>, query: SearchQuery, boundaries: Boundaries) : this(query, mutableMapOf()) {
     val regex = query.toRegex()
     
     if (regex != null) {
@@ -148,9 +145,5 @@ class SearchProcessor private constructor(
       
       results[editor] = remaining
     }
-  }
-  
-  fun clone(): SearchProcessor {
-    return SearchProcessor(editors, query, results.clone())
   }
 }

@@ -74,10 +74,6 @@ class Tagger(private val editors: List<Editor>) {
     return TaggingResult.Mark(createTagMarkers(resultTags, query.rawText.ifEmpty { null }))
   }
   
-  fun clone(): Tagger {
-    return Tagger(editors).also { it.tagMap.putAll(tagMap) }
-  }
-  
   /**
    * Assigns as many unassigned tags as possible, and merges them with the existing compatible tags.
    */

@@ -3,7 +3,6 @@ package org.acejump.action
 import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries.VISIBLE_ON_SCREEN
 import org.acejump.modes.ActionMode
-import org.acejump.modes.VimJumpMode
 import org.acejump.session.Session
 
 sealed class AceVimAction : AceKeyboardAction() {
@@ -14,9 +13,7 @@ sealed class AceVimAction : AceKeyboardAction() {
     start(session)
   }
   
-  protected open fun start(session: Session) {
-    session.startJumpMode(::VimJumpMode)
-  }
+  protected abstract fun start(session: Session)
   
   class GoToDeclaration : AceVimAction() {
     override val boundary = VISIBLE_ON_SCREEN

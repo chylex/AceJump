@@ -10,5 +10,4 @@ interface SessionMode {
   
   fun type(state: SessionState, charTyped: Char, acceptedTag: Tag?): TypeResult
   fun accept(state: SessionState, acceptedTag: Tag): Boolean
-  fun getHint(acceptedTag: Int?, hasQuery: Boolean): Array<String>?
 }

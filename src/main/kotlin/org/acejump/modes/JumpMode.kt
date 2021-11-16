@@ -22,8 +22,4 @@ open class JumpMode : SessionMode {
     state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase, isFinal = true)
     return true
   }
-  
-  override fun getHint(acceptedTag: Int?, hasQuery: Boolean): Array<String>? {
-    return null
-  }
 }
