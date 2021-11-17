@@ -37,24 +37,6 @@
       <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl SEMICOLON"/>
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl SEMICOLON"/>
     </action>
-    <action id="AceLineStartsAction"
-            class="org.acejump.action.AceKeyboardAction$StartAllLineStartsMode"
-            text="Start AceJump in All Line Starts Mode"/>
-    <action id="AceLineEndsAction"
-            class="org.acejump.action.AceKeyboardAction$StartAllLineEndsMode"
-            text="Start AceJump in All Line Ends Mode"/>
-    <action id="AceLineIndentsAction"
-            class="org.acejump.action.AceKeyboardAction$StartAllLineIndentsMode"
-            text="Start AceJump in All Line Indents Mode"/>
-    <action id="AceWordAction"
-            class="org.acejump.action.AceKeyboardAction$StartAllWordsMode"
-            text="Start AceJump in All Words Mode"/>
-    <action id="AceWordForwardAction"
-            class="org.acejump.action.AceKeyboardAction$StartAllWordsForwardMode"
-            text="Start AceJump in All Words After Caret Mode"/>
-    <action id="AceWordBackwardsAction"
-            class="org.acejump.action.AceKeyboardAction$StartAllWordsBackwardsMode"
-            text="Start AceJump in All Words Before Caret Mode"/>
     <action id="AceVimAction_GoToDeclaration"
             class="org.acejump.action.AceVimAction$GoToDeclaration"
             text="AceJump Vim - GoToDeclaration"/>

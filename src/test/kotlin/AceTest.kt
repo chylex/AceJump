@@ -1,5 +1,4 @@
 
-import org.acejump.action.AceKeyboardAction
 import org.acejump.test.util.BaseTest
 
 /**
@@ -33,33 +32,5 @@ class AceTest : BaseTest() {
     typeAndWaitForResults(session.tags[0].key)
 
     myFixture.checkResult("testin<caret>g 1234")
-  }
-
-  fun `test words before caret action`() {
-    makeEditor("test words <caret> before caret is two")
-
-    takeAction(AceKeyboardAction.StartAllWordsBackwardsMode)
-
-    assertEquals(2, session.tags.size)
-  }
-
-  fun `test words after caret action`() {
-    makeEditor("test words <caret> after caret is four")
-
-    takeAction(AceKeyboardAction.StartAllWordsForwardMode)
-
-    assertEquals(4, session.tags.size)
-  }
-
-  fun `test word mode`() {
-    makeEditor("test word action")
-
-    takeAction(AceKeyboardAction.StartAllWordsMode)
-
-    assertEquals(3, session.tags.size)
-
-    typeAndWaitForResults(session.tags[1].key)
-
-    myFixture.checkResult("test <caret>word action")
   }
 }
