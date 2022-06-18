@@ -23,4 +23,4 @@ tasks.withType<KotlinCompile> {
 }
 
 group = "org.acejump"
-version = "chylex-8"
+version = "chylex-11"
