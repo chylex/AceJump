@@ -86,7 +86,7 @@ sealed class AceTagAction {
       val project = editor.project ?: return
       val fem = FileEditorManagerEx.getInstanceEx(project)
       
-      val window = fem.windows.firstOrNull { (it.selectedEditor?.selectedWithProvider?.fileEditor as? TextEditor)?.editor === editor }
+      val window = fem.windows.firstOrNull { (it.selectedComposite?.selectedWithProvider?.fileEditor as? TextEditor)?.editor === editor }
       if (window != null && window !== fem.currentWindow) {
         fem.currentWindow = window
       }

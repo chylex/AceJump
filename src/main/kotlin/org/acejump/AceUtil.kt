@@ -23,7 +23,7 @@ val Project.openEditors: List<Editor>
     return try {
       FileEditorManagerEx.getInstanceEx(this)
         .splitters
-        .selectedEditors
+        .getSelectedEditors()
         .mapNotNull { (it as? TextEditor)?.editor }
     } catch (e: IncorrectOperationException) {
       emptyList()

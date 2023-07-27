@@ -1,26 +1,43 @@
+@file:Suppress("ConvertLambdaToReference")
+
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-  idea
-  kotlin("jvm") version "1.5.10"
-  id("org.jetbrains.intellij") version "1.11.0"
-}
-
-repositories {
-  mavenCentral()
-}
-
-intellij {
-  version.set("2022.3.1")
-  updateSinceUntilBuild.set(false)
-  pluginsRepositories.custom("https://intellij.chylex.com")
-  plugins.add("IdeaVIM:chylex-15")
-}
-
-tasks.withType<KotlinCompile> {
-  kotlinOptions.jvmTarget = "11"
-  kotlinOptions.freeCompilerArgs = listOf("-Xjvm-default=all")
+	kotlin("jvm") version "1.8.0"
+	id("org.jetbrains.intellij") version "1.15.0"
 }
 
 group = "org.acejump"
 version = "chylex-11"
+
+repositories {
+	mavenCentral()
+}
+
+kotlin {
+	jvmToolchain(17)
+}
+
+intellij {
+	version.set("2023.1")
+	updateSinceUntilBuild.set(false)
+	plugins.add("IdeaVIM:chylex-15")
+	
+	pluginsRepositories {
+		custom("https://intellij.chylex.com")
+	}
+}
+
+tasks.patchPluginXml {
+	sinceBuild.set("231")
+}
+
+tasks.buildSearchableOptions {
+	enabled = false
+}
+
+tasks.withType<KotlinCompile> {
+	kotlinOptions.freeCompilerArgs = listOf(
+		"-Xjvm-default=all"
+	)
+}
