@@ -7,7 +7,7 @@ import com.intellij.openapi.fileTypes.PlainTextFileType
 import com.intellij.psi.PsiFile
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ui.UIUtil
-import org.acejump.action.AceKeyboardAction
+import org.acejump.action.AceVimAction
 import org.acejump.session.SessionManager
 
 abstract class BaseTest : BasePlatformTestCase() {
@@ -58,7 +58,7 @@ abstract class BaseTest : BasePlatformTestCase() {
   private fun String.executeQuery(query: String) {
     myFixture.run {
       makeEditor(this@executeQuery)
-      testAction(AceKeyboardAction.ActivateAceJump)
+      testAction(AceVimAction.JumpAllEditors())
       typeAndWaitForResults(query)
     }
   }

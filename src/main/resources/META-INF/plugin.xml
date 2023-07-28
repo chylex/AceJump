@@ -9,11 +9,10 @@
   </description>
 
   <depends>com.intellij.modules.platform</depends>
+  <depends>IdeaVIM</depends>
 
   <category>Navigation</category>
   <vendor url="https://github.com/acejump/AceJump">AceJump</vendor>
-
-  <depends optional="true" config-file="acejump-ideavim.xml">IdeaVIM</depends>
 
   <extensions defaultExtensionNs="com.intellij">
     <applicationService serviceImplementation="org.acejump.config.AceConfig"/>
@@ -28,35 +27,24 @@
     <editorActionHandler action="EditorEnter" order="first"
                          implementationClass="org.acejump.action.AceEditorAction$TagImmediately"/>
   </extensions>
-
+  
   <actions>
-    <action id="AceAction"
-            class="org.acejump.action.AceKeyboardAction$ActivateAceJump"
-            text="Activate AceJump">
-      <keyboard-shortcut keymap="Mac OS X" first-keystroke="ctrl SEMICOLON"/>
-      <keyboard-shortcut keymap="Mac OS X 10.5+" first-keystroke="ctrl SEMICOLON"/>
-      <keyboard-shortcut keymap="$default" first-keystroke="ctrl SEMICOLON"/>
-    </action>
-    <action id="AceVimAction_GoToDeclaration"
-            class="org.acejump.action.AceVimAction$GoToDeclaration"
-            text="AceJump Vim - GoToDeclaration"/>
-    <action id="AceVimAction_GoToTypeDeclaration"
-            class="org.acejump.action.AceVimAction$GoToTypeDeclaration"
-            text="AceJump Vim - GoToTypeDeclaration"/>
-    <action id="AceVimAction_ShowIntentions"
-            class="org.acejump.action.AceVimAction$ShowIntentions"
-            text="AceJump Vim - ShowIntentions"/>
-    <action id="AceVimAction_ShowUsages"
-            class="org.acejump.action.AceVimAction$ShowUsages"
-            text="AceJump Vim - ShowUsages"/>
-    <action id="AceVimAction_FindUsages"
-            class="org.acejump.action.AceVimAction$FindUsages"
-            text="AceJump Vim - FindUsages"/>
-    <action id="AceVimAction_Refactor"
-            class="org.acejump.action.AceVimAction$Refactor"
-            text="AceJump Vim - Refactor"/>
-    <action id="AceVimAction_Rename"
-            class="org.acejump.action.AceVimAction$Rename"
-            text="AceJump Vim - Rename"/>
+    <action id="AceVimAction_JumpAllEditors" class="org.acejump.action.AceVimAction$JumpAllEditors" text="AceJump Vim - Jump All Editors" />
+    <action id="AceVimAction_JumpForward" class="org.acejump.action.AceVimAction$JumpForward" text="AceJump Vim - Jump Forward" />
+    <action id="AceVimAction_JumpBackward" class="org.acejump.action.AceVimAction$JumpBackward" text="AceJump Vim - Jump Backward" />
+    <action id="AceVimAction_JumpTillForward" class="org.acejump.action.AceVimAction$JumpTillForward" text="AceJump Vim - Jump Till Forward" />
+    <action id="AceVimAction_JumpTillBackward" class="org.acejump.action.AceVimAction$JumpTillBackward" text="AceJump Vim - Jump Till Backward" />
+    <action id="AceVimAction_JumpOnLineForward" class="org.acejump.action.AceVimAction$JumpOnLineForward" text="AceJump Vim - Jump On Line Forward" />
+    <action id="AceVimAction_JumpOnLineBackward" class="org.acejump.action.AceVimAction$JumpOnLineBackward" text="AceJump Vim - Jump On Line Backward" />
+    <action id="AceVimAction_JumpLineIndentsForward" class="org.acejump.action.AceVimAction$JumpLineIndentsForward" text="AceJump Vim - Jump Line Indents Forward" />
+    <action id="AceVimAction_JumpLineIndentsBackward" class="org.acejump.action.AceVimAction$JumpLineIndentsBackward" text="AceJump Vim - Jump Line Indents Backward" />
+    <action id="AceVimAction_JumpLWordForward" class="org.acejump.action.AceVimAction$JumpLWordForward" text="AceJump Vim - Jump LWord Forward" />
+    <action id="AceVimAction_JumpUWordForward" class="org.acejump.action.AceVimAction$JumpUWordForward" text="AceJump Vim - Jump UWord Forward" />
+    <action id="AceVimAction_JumpLWordBackward" class="org.acejump.action.AceVimAction$JumpLWordBackward" text="AceJump Vim - Jump LWord Backward" />
+    <action id="AceVimAction_JumpUWordBackward" class="org.acejump.action.AceVimAction$JumpUWordBackward" text="AceJump Vim - Jump UWord Backward" />
+    <action id="AceVimAction_JumpLWordEndForward" class="org.acejump.action.AceVimAction$JumpLWordEndForward" text="AceJump Vim - Jump LWord End Forward" />
+    <action id="AceVimAction_JumpUWordEndForward" class="org.acejump.action.AceVimAction$JumpUWordEndForward" text="AceJump Vim - Jump UWord End Forward" />
+    <action id="AceVimAction_JumpLWordEndBackward" class="org.acejump.action.AceVimAction$JumpLWordEndBackward" text="AceJump Vim - Jump LWord End Backward" />
+    <action id="AceVimAction_JumpUWordEndBackward" class="org.acejump.action.AceVimAction$JumpUWordEndBackward" text="AceJump Vim - Jump UWord End Backward" />
   </actions>
 </idea-plugin>

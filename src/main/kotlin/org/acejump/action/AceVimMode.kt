@@ -1,4 +1,4 @@
-package org.acejump.vim
+package org.acejump.action
 
 import com.intellij.openapi.editor.Editor
 import org.acejump.boundaries.Boundaries
@@ -8,8 +8,7 @@ import org.acejump.search.Pattern
 import org.acejump.session.Session
 
 sealed class AceVimMode {
-  open val boundaries: Boundaries
-    get() = StandardBoundaries.VISIBLE_ON_SCREEN
+  abstract val boundaries: Boundaries
   
   open fun getJumpEditors(mainEditor: Editor): List<Editor> {
     return listOf(mainEditor)
@@ -21,6 +20,7 @@ sealed class AceVimMode {
   class Jump(override val boundaries: Boundaries) : AceVimMode()
   
   object JumpAllEditors : AceVimMode() {
+    override val boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
     override fun getJumpEditors(mainEditor: Editor): List<Editor> {
       val project = mainEditor.project ?: return super.getJumpEditors(mainEditor)
       

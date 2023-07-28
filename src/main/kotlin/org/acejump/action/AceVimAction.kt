@@ -1,66 +1,169 @@
 package org.acejump.action
 
-import org.acejump.boundaries.Boundaries
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.CommonDataKeys
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.project.DumbAwareAction
+import com.maddyhome.idea.vim.KeyHandler
+import com.maddyhome.idea.vim.VimPlugin
+import com.maddyhome.idea.vim.action.change.change.ChangeVisualAction
+import com.maddyhome.idea.vim.action.change.delete.DeleteVisualAction
+import com.maddyhome.idea.vim.action.copy.YankVisualAction
+import com.maddyhome.idea.vim.api.injector
+import com.maddyhome.idea.vim.command.MappingMode.OP_PENDING
+import com.maddyhome.idea.vim.command.OperatorArguments
+import com.maddyhome.idea.vim.command.VimStateMachine
+import com.maddyhome.idea.vim.group.visual.vimSetSelection
+import com.maddyhome.idea.vim.helper.inVisualMode
+import com.maddyhome.idea.vim.helper.vimSelectionStart
+import com.maddyhome.idea.vim.helper.vimStateMachine
+import com.maddyhome.idea.vim.newapi.vim
+import org.acejump.boundaries.StandardBoundaries.AFTER_CARET
+import org.acejump.boundaries.StandardBoundaries.BEFORE_CARET
+import org.acejump.boundaries.StandardBoundaries.CARET_LINE
 import org.acejump.boundaries.StandardBoundaries.VISIBLE_ON_SCREEN
-import org.acejump.modes.ActionMode
-import org.acejump.session.Session
+import org.acejump.modes.JumpMode
+import org.acejump.search.Pattern
+import org.acejump.search.Tag
+import org.acejump.session.SessionManager
+import org.acejump.session.SessionState
 
-sealed class AceVimAction : AceKeyboardAction() {
-  protected abstract val boundary: Boundaries
+sealed class AceVimAction : DumbAwareAction() {
+  protected abstract val mode: AceVimMode
   
-  final override fun invoke(session: Session) {
-    session.defaultBoundary = boundary
-    start(session)
+  final override fun actionPerformed(e: AnActionEvent) {
+    val editor = e.getData(CommonDataKeys.EDITOR) ?: return
+    val context = e.dataContext.vim
+    
+    val caret = editor.caretModel.currentCaret
+    val initialOffset = caret.offset
+    val selectionStart = if (editor.inVisualMode) caret.vimSelectionStart else null
+    
+    val session = SessionManager.start(editor, mode.getJumpEditors(editor))
+    
+    session.defaultBoundary = mode.boundaries
+    session.startJumpMode {
+      object : JumpMode() {
+        override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
+          state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase, isFinal = true)
+          
+          if (selectionStart != null) {
+            caret.vimSetSelection(selectionStart, caret.offset, moveCaretToSelectionEnd = true)
+          }
+          else {
+            val vim = editor.vim
+            val commandState = vim.vimStateMachine
+            if (commandState.isOperatorPending) {
+              val key = commandState.commandBuilder.keys.singleOrNull()?.keyChar
+              
+              commandState.reset()
+              KeyHandler.getInstance().fullReset(vim)
+              
+              VimPlugin.getVisualMotion().enterVisualMode(vim, VimStateMachine.SubMode.VISUAL_CHARACTER)
+              caret.vimSetSelection(caret.offset, initialOffset, moveCaretToSelectionEnd = true)
+              
+              val action = when (key) {
+                'd'  -> DeleteVisualAction()
+                'c'  -> ChangeVisualAction()
+                'y'  -> YankVisualAction()
+                else -> null
+              }
+              
+              if (action != null) {
+                ApplicationManager.getApplication().invokeLater {
+                  WriteAction.run<Nothing> {
+                    commandState.commandBuilder.pushCommandPart(action)
+                    
+                    val cmd = commandState.commandBuilder.buildCommand()
+                    val operatorArguments = OperatorArguments(
+                      commandState.mappingState.mappingMode == OP_PENDING,
+                      cmd.rawCount, commandState.mode, commandState.subMode
+                    )
+                    
+                    commandState.setExecutingCommand(cmd)
+                    injector.actionExecutor.executeVimAction(vim, action, context, operatorArguments)
+                    // TODO does not update status
+                  }
+                }
+              }
+            }
+          }
+          
+          mode.finishSession(editor, session)
+          return true
+        }
+      }
+    }
+    
+    mode.setupSession(editor, session)
   }
   
-  protected abstract fun start(session: Session)
-  
-  class GoToDeclaration : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.GoToDeclaration, shiftMode = false) }
-    }
+  class JumpAllEditors : AceVimAction() {
+    override val mode = AceVimMode.JumpAllEditors
   }
   
-  class GoToTypeDeclaration : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.GoToDeclaration, shiftMode = true) }
-    }
+  class JumpForward : AceVimAction() {
+    override val mode = AceVimMode.Jump(AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
   }
   
-  class ShowIntentions : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.ShowIntentions, shiftMode = false) }
-    }
+  class JumpBackward : AceVimAction() {
+    override val mode = AceVimMode.Jump(BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
   }
   
-  class ShowUsages : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.ShowUsages, shiftMode = false) }
-    }
+  class JumpTillForward : AceVimAction() {
+    override val mode = AceVimMode.JumpTillForward(AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
   }
   
-  class FindUsages : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.ShowUsages, shiftMode = true) }
-    }
+  class JumpTillBackward : AceVimAction() {
+    override val mode = AceVimMode.JumpTillBackward(BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
   }
   
-  class Refactor : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.Refactor, shiftMode = false) }
-    }
+  class JumpOnLineForward : AceVimAction() {
+    override val mode = AceVimMode.Jump(AFTER_CARET.intersection(CARET_LINE))
   }
   
-  class Rename : AceVimAction() {
-    override val boundary = VISIBLE_ON_SCREEN
-    override fun start(session: Session) {
-      session.startJumpMode { ActionMode(AceTagAction.Refactor, shiftMode = true) }
-    }
+  class JumpOnLineBackward : AceVimAction() {
+    override val mode = AceVimMode.Jump(BEFORE_CARET.intersection(CARET_LINE))
+  }
+  
+  class JumpLineIndentsForward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.LINE_INDENTS, AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpLineIndentsBackward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.LINE_INDENTS, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpLWordForward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_LWORD, AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpUWordForward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_UWORD, AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpLWordBackward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_LWORD, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpUWordBackward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_UWORD, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpLWordEndForward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_LWORD_END, AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpUWordEndForward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_UWORD_END, AFTER_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpLWordEndBackward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_LWORD_END, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpUWordEndBackward : AceVimAction() {
+    override val mode = AceVimMode.JumpToPattern(Pattern.VIM_UWORD_END, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
   }
 }

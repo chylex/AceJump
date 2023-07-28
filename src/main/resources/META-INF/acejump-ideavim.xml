@@ -1,5 +1,0 @@
-<idea-plugin>
-  <extensions defaultExtensionNs="IdeaVIM">
-    <vimExtension implementation="org.acejump.vim.AceVimExtension" name="acejump" />
-  </extensions>
-</idea-plugin>

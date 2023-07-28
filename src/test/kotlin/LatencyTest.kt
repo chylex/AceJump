@@ -1,11 +1,10 @@
-import org.acejump.action.AceKeyboardAction
+
+import org.acejump.action.AceVimAction
 import org.acejump.test.util.BaseTest
-import org.junit.Ignore
 import java.io.File
 import kotlin.random.Random
 import kotlin.system.measureTimeMillis
 
-@Ignore
 class LatencyTest : BaseTest() {
   
   private fun `test tag latency`(editorText: String) {
@@ -15,7 +14,7 @@ class LatencyTest : BaseTest() {
       
       for (query in chars) {
         makeEditor(editorText)
-        myFixture.testAction(AceKeyboardAction.ActivateAceJump)
+        myFixture.testAction(AceVimAction.JumpAllEditors())
         time += measureTimeMillis { typeAndWaitForResults("$query") }
         // TODO assert(Tagger.markers.isNotEmpty()) { "Should be tagged: $query" }
         resetEditor()
