@@ -6,23 +6,19 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.project.DumbAwareAction
 import com.maddyhome.idea.vim.KeyHandler
-import com.maddyhome.idea.vim.VimPlugin
 import com.maddyhome.idea.vim.action.change.change.ChangeVisualAction
 import com.maddyhome.idea.vim.action.change.delete.DeleteVisualAction
 import com.maddyhome.idea.vim.action.copy.YankVisualAction
 import com.maddyhome.idea.vim.api.injector
 import com.maddyhome.idea.vim.command.MappingMode.OP_PENDING
 import com.maddyhome.idea.vim.command.OperatorArguments
-import com.maddyhome.idea.vim.command.VimStateMachine
 import com.maddyhome.idea.vim.group.visual.vimSetSelection
 import com.maddyhome.idea.vim.helper.inVisualMode
 import com.maddyhome.idea.vim.helper.vimSelectionStart
 import com.maddyhome.idea.vim.helper.vimStateMachine
 import com.maddyhome.idea.vim.newapi.vim
-import org.acejump.boundaries.StandardBoundaries.AFTER_CARET
-import org.acejump.boundaries.StandardBoundaries.BEFORE_CARET
-import org.acejump.boundaries.StandardBoundaries.CARET_LINE
-import org.acejump.boundaries.StandardBoundaries.VISIBLE_ON_SCREEN
+import com.maddyhome.idea.vim.state.mode.SelectionType
+import org.acejump.boundaries.StandardBoundaries.*
 import org.acejump.modes.JumpMode
 import org.acejump.search.Pattern
 import org.acejump.search.Tag
@@ -49,7 +45,7 @@ sealed class AceVimAction : DumbAwareAction() {
           state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase, isFinal = true)
           
           if (selectionStart != null) {
-            caret.vimSetSelection(selectionStart, caret.offset, moveCaretToSelectionEnd = true)
+            caret.vim.vimSetSelection(selectionStart, caret.offset, moveCaretToSelectionEnd = true)
           }
           else {
             val vim = editor.vim
@@ -60,8 +56,8 @@ sealed class AceVimAction : DumbAwareAction() {
               commandState.reset()
               KeyHandler.getInstance().fullReset(vim)
               
-              VimPlugin.getVisualMotion().enterVisualMode(vim, VimStateMachine.SubMode.VISUAL_CHARACTER)
-              caret.vimSetSelection(caret.offset, initialOffset, moveCaretToSelectionEnd = true)
+              AceVimUtil.enterVisualMode(vim, SelectionType.CHARACTER_WISE)
+              caret.vim.vimSetSelection(caret.offset, initialOffset, moveCaretToSelectionEnd = true)
               
               val action = when (key) {
                 'd'  -> DeleteVisualAction()
@@ -76,12 +72,9 @@ sealed class AceVimAction : DumbAwareAction() {
                     commandState.commandBuilder.pushCommandPart(action)
                     
                     val cmd = commandState.commandBuilder.buildCommand()
-                    val operatorArguments = OperatorArguments(
-                      commandState.mappingState.mappingMode == OP_PENDING,
-                      cmd.rawCount, commandState.mode, commandState.subMode
-                    )
+                    val operatorArguments = OperatorArguments(commandState.mappingState.mappingMode == OP_PENDING, cmd.rawCount, commandState.mode)
                     
-                    commandState.setExecutingCommand(cmd)
+                    commandState.executingCommand = cmd
                     injector.actionExecutor.executeVimAction(vim, action, context, operatorArguments)
                     // TODO does not update status
                   }
