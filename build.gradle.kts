@@ -21,7 +21,7 @@ kotlin {
 intellij {
 	version.set("2023.2")
 	updateSinceUntilBuild.set(false)
-	plugins.add("IdeaVIM:chylex-16")
+	plugins.add("IdeaVIM:chylex-20")
 	
 	pluginsRepositories {
 		custom("https://intellij.chylex.com")
