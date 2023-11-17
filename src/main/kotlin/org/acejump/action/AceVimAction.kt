@@ -86,6 +86,7 @@ sealed class AceVimAction : DumbAwareAction() {
             }
           }
           
+          injector.scroll.scrollCaretIntoView(editor.vim)
           mode.finishSession(editor, session)
           return true
         }
