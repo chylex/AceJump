@@ -30,6 +30,7 @@
   
   <actions>
     <action id="AceVimAction_JumpAllEditors" class="org.acejump.action.AceVimAction$JumpAllEditors" text="AceJump Vim - Jump All Editors" />
+    <action id="AceVimAction_JumpAllEditors_GoToDeclaration" class="org.acejump.action.AceVimAction$JumpAllEditorsGoToDeclaration" text="AceJump Vim - Jump All Editors - Go To Declaration" />
     <action id="AceVimAction_JumpForward" class="org.acejump.action.AceVimAction$JumpForward" text="AceJump Vim - Jump Forward" />
     <action id="AceVimAction_JumpBackward" class="org.acejump.action.AceVimAction$JumpBackward" text="AceJump Vim - Jump Backward" />
     <action id="AceVimAction_JumpTillForward" class="org.acejump.action.AceVimAction$JumpTillForward" text="AceJump Vim - Jump Till Forward" />

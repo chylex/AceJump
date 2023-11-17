@@ -1,5 +1,8 @@
 package org.acejump.action
 
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.IdeActions
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.command.CommandProcessor
 import com.intellij.openapi.command.UndoConfirmationPolicy
 import com.intellij.openapi.editor.Document
@@ -9,6 +12,7 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.fileEditor.ex.IdeDocumentHistory
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.playback.commands.ActionCommand
 import org.acejump.search.SearchProcessor
 
 /**
@@ -49,6 +53,14 @@ sealed class AceTagAction {
       caretModel.moveToOffset(offset)
     }
     
+    fun performAction(actionName: String) {
+      val actionManager = ActionManager.getInstance()
+      val action = actionManager.getAction(actionName)
+      if (action != null) {
+        actionManager.tryToExecute(action, ActionCommand.getInputEvent(null), null, null, true)
+      }
+    }
+    
     fun ensureEditorFocused(editor: Editor) {
       val project = editor.project ?: return
       val fem = FileEditorManagerEx.getInstanceEx(project)
@@ -79,6 +91,18 @@ sealed class AceTagAction {
   object JumpToSearchStart : BaseJumpAction() {
     override fun getCaretOffset(editor: Editor, searchProcessor: SearchProcessor, offset: Int): Int {
       return offset
+    }
+  }
+  
+  /**
+   * On default action, performs the Go To Declaration action, available via `Navigate | Declaration or Usages`.
+   * On shift action, performs the Go To Type Declaration action, available via `Navigate | Type Declaration`.
+   * Always places the caret at the start of the word.
+   */
+  object GoToDeclaration : AceTagAction() {
+    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
+      JumpToSearchStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
+      ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) IdeActions.ACTION_GOTO_TYPE_DECLARATION else IdeActions.ACTION_GOTO_DECLARATION) }
     }
   }
 }

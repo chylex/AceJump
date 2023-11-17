@@ -18,7 +18,10 @@ import com.maddyhome.idea.vim.helper.vimSelectionStart
 import com.maddyhome.idea.vim.helper.vimStateMachine
 import com.maddyhome.idea.vim.newapi.vim
 import com.maddyhome.idea.vim.state.mode.SelectionType
-import org.acejump.boundaries.StandardBoundaries.*
+import org.acejump.boundaries.StandardBoundaries.AFTER_CARET
+import org.acejump.boundaries.StandardBoundaries.BEFORE_CARET
+import org.acejump.boundaries.StandardBoundaries.CARET_LINE
+import org.acejump.boundaries.StandardBoundaries.VISIBLE_ON_SCREEN
 import org.acejump.modes.JumpMode
 import org.acejump.search.Pattern
 import org.acejump.search.Tag
@@ -158,5 +161,26 @@ sealed class AceVimAction : DumbAwareAction() {
   
   class JumpUWordEndBackward : AceVimAction() {
     override val mode = AceVimMode.JumpToPattern(Pattern.VIM_UWORD_END, BEFORE_CARET.intersection(VISIBLE_ON_SCREEN))
+  }
+  
+  class JumpAllEditorsGoToDeclaration : DumbAwareAction() {
+    override fun update(action: AnActionEvent) {
+      action.presentation.isEnabled = action.getData(CommonDataKeys.EDITOR) != null
+    }
+    
+    override fun actionPerformed(e: AnActionEvent) {
+      val editor = e.getData(CommonDataKeys.EDITOR) ?: return
+      val session = SessionManager.start(editor, AceVimMode.JumpAllEditors.getJumpEditors(editor))
+      
+      session.defaultBoundary = VISIBLE_ON_SCREEN
+      session.startJumpMode {
+        object : JumpMode() {
+          override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
+            state.act(AceTagAction.GoToDeclaration, acceptedTag, shiftMode = wasUpperCase, isFinal = true)
+            return true
+          }
+        }
+      }
+    }
   }
 }
