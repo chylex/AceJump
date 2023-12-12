@@ -5,7 +5,6 @@ import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.ui.ColorUtil
 import org.acejump.config.AceConfig
 import java.awt.Font
-import java.awt.FontMetrics
 
 /**
  * Stores font metrics for aligning and rendering [TagMarker]s.
@@ -18,7 +17,6 @@ internal class TagFont(editor: Editor) {
   var backgroundColor = AceConfig.tagBackgroundColor
   val isForegroundDark = ColorUtil.isDark(foregroundColor)
   
-  val editorFontMetrics: FontMetrics = editor.component.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN))
   val lineHeight = editor.lineHeight
   val baselineDistance = editor.ascent
 }

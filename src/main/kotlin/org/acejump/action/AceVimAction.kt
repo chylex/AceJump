@@ -44,8 +44,8 @@ sealed class AceVimAction : DumbAwareAction() {
     session.defaultBoundary = mode.boundaries
     session.startJumpMode {
       object : JumpMode() {
-        override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
-          state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase, isFinal = true)
+        override fun accept(state: SessionState, acceptedTag: Tag) {
+          AceTagAction.JumpToSearchStart.invoke(acceptedTag, shiftMode = wasUpperCase, isFinal = true)
           
           if (selectionStart != null) {
             caret.vim.vimSetSelection(selectionStart, caret.offset, moveCaretToSelectionEnd = true)
@@ -88,7 +88,6 @@ sealed class AceVimAction : DumbAwareAction() {
           
           injector.scroll.scrollCaretIntoView(editor.vim)
           mode.finishSession(editor, session)
-          return true
         }
       }
     }
@@ -176,9 +175,8 @@ sealed class AceVimAction : DumbAwareAction() {
       session.defaultBoundary = VISIBLE_ON_SCREEN
       session.startJumpMode {
         object : JumpMode() {
-          override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
-            state.act(AceTagAction.GoToDeclaration, acceptedTag, shiftMode = wasUpperCase, isFinal = true)
-            return true
+          override fun accept(state: SessionState, acceptedTag: Tag) {
+            AceTagAction.GoToDeclaration.invoke(acceptedTag, shiftMode = wasUpperCase, isFinal = true)
           }
         }
       }

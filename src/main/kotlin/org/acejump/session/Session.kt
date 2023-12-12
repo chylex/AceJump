@@ -1,23 +1,29 @@
 package org.acejump.session
 
 import com.intellij.codeInsight.hint.HintManagerImpl
-import com.intellij.openapi.actionSystem.DataContext
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.ScrollType
-import com.intellij.openapi.editor.actionSystem.TypedActionHandler
 import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.impl.AbstractColorsScheme
-import org.acejump.ExternalUsage
+import it.unimi.dsi.fastutil.ints.IntList
 import org.acejump.boundaries.Boundaries
 import org.acejump.boundaries.StandardBoundaries
-import org.acejump.clone
 import org.acejump.config.AceConfig
 import org.acejump.input.EditorKeyListener
 import org.acejump.input.KeyLayoutCache
 import org.acejump.modes.JumpMode
 import org.acejump.modes.SessionMode
-import org.acejump.search.*
+import org.acejump.search.Pattern
+import org.acejump.search.SearchProcessor
+import org.acejump.search.SearchQuery
+import org.acejump.search.Tag
+import org.acejump.session.TypeResult.AcceptTag
+import org.acejump.session.TypeResult.ChangeMode
+import org.acejump.session.TypeResult.ChangeState
+import org.acejump.session.TypeResult.EndSession
+import org.acejump.session.TypeResult.Nothing
 import org.acejump.view.TagCanvas
+import org.acejump.view.TagMarker
 import org.acejump.view.TextHighlighter
 
 /**
@@ -27,8 +33,7 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
   private val editorSettings = EditorSettings.setup(mainEditor)
   private lateinit var mode: SessionMode
   
-  private var state: SessionStateImpl? = null
-  private var tagger = Tagger(jumpEditors)
+  private var state: SessionState? = null
   
   private var acceptedTag: Tag? = null
     set(value) {
@@ -43,69 +48,44 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
   private val textHighlighter = TextHighlighter()
   private val tagCanvases = jumpEditors.associateWith(::TagCanvas)
   
-  @ExternalUsage
-  val tags
-    get() = tagger.tags
-  
   var defaultBoundary: Boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
+  
+  private val actions = object : SessionActions {
+    override fun highlight(results: Map<Editor, IntList>, query: SearchQuery) {
+      textHighlighter.renderOccurrences(results, query)
+    }
+    
+    override fun tag(markers: Map<Editor, Collection<TagMarker>>) {
+      for ((editor, canvas) in tagCanvases) {
+        canvas.setMarkers(markers[editor].orEmpty())
+      }
+    }
+  }
   
   init {
     KeyLayoutCache.ensureInitialized(AceConfig.settings)
-    
-    EditorKeyListener.attach(mainEditor, object : TypedActionHandler {
-      override fun execute(editor: Editor, charTyped: Char, context: DataContext) {
-        val state = state ?: return
-        val hadTags = tagger.hasTags
-        
-        editorSettings.startEditing(editor)
-        val result = mode.type(state, charTyped, acceptedTag)
-        editorSettings.stopEditing(editor)
-        
-        when (result) {
-          TypeResult.Nothing          -> return;
-          is TypeResult.UpdateResults -> updateSearch(result.processor, markImmediately = hadTags)
-          is TypeResult.ChangeMode    -> setMode(result.mode)
-          
-          TypeResult.RestartSearch    -> restart().also {
-            this@Session.state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
-          }
-          
-          TypeResult.EndSession       -> end()
-        }
-      }
-    })
+    EditorKeyListener.attach(mainEditor) { editor, charTyped, _ -> typeCharacter(editor, charTyped) }
   }
   
-  /**
-   * Updates text highlights and tag markers according to the current search state. Dispatches jumps if the search query matches a tag.
-   */
-  private fun updateSearch(processor: SearchProcessor, markImmediately: Boolean) {
-    val query = processor.query
-    val results = processor.results
+  private fun typeCharacter(editor: Editor, charTyped: Char) {
+    val state = state ?: return
     
-    if (!markImmediately && query.rawText.let { it.length < AceConfig.minQueryLength && it.all(Char::isLetterOrDigit) }) {
-      textHighlighter.renderOccurrences(results, query)
-      return
-    }
+    editorSettings.startEditing(editor)
+    val result = mode.type(state, charTyped, acceptedTag)
+    editorSettings.stopEditing(editor)
     
-    when (val result = tagger.update(query, results.clone())) {
-      is TaggingResult.Accept -> {
+    when (result) {
+      Nothing        -> return
+      is ChangeState -> this.state = result.state
+      is ChangeMode  -> setMode(result.mode)
+      
+      is AcceptTag   -> {
         acceptedTag = result.tag
-        textHighlighter.renderFinal(result.tag, processor.query)
-        
-        if (state?.let { mode.accept(it, result.tag) } == true) {
-          end()
-          return
-        }
+        mode.accept(state, result.tag)
+        end()
       }
       
-      is TaggingResult.Mark   -> {
-        for ((editor, canvas) in tagCanvases) {
-          canvas.setMarkers(result.markers[editor].orEmpty())
-        }
-        
-        textHighlighter.renderOccurrences(results, query)
-      }
+      EndSession     -> end()
     }
   }
   
@@ -129,7 +109,7 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
     }
     
     setMode(mode())
-    state = SessionStateImpl(jumpEditors, tagger, defaultBoundary)
+    state = SessionState.WaitForKey(actions, jumpEditors, defaultBoundary)
   }
   
   /**
@@ -140,22 +120,18 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
       setMode(JumpMode())
     }
     
-    tagger = Tagger(jumpEditors)
-    tagCanvases.values.forEach { it.setMarkers(emptyList()) }
+    for (canvas in tagCanvases.values) {
+      canvas.setMarkers(emptyList())
+    }
     
     val processor = SearchProcessor.fromRegex(jumpEditors, pattern.regex, defaultBoundary)
-    state = SessionStateImpl(jumpEditors, tagger, defaultBoundary, processor)
+    textHighlighter.renderOccurrences(processor.resultsCopy, processor.query)
     
-    updateSearch(processor, markImmediately = true)
+    state = SessionState.SelectTag(actions, jumpEditors, processor)
   }
   
   fun tagImmediately() {
-    val state = state ?: return
-    val processor = state.currentProcessor
-    
-    if (processor != null) {
-      updateSearch(processor, markImmediately = true)
-    }
+    typeCharacter(mainEditor, '\n')
   }
   
   /**
@@ -170,7 +146,6 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
    */
   fun restart() {
     state = null
-    tagger = Tagger(jumpEditors)
     acceptedTag = null
     tagCanvases.values.forEach(TagCanvas::removeMarkers)
     textHighlighter.reset()
@@ -185,7 +160,6 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
    * Should only be used from [SessionManager] to dispose a successfully ended session.
    */
   internal fun dispose() {
-    tagger = Tagger(jumpEditors)
     tagCanvases.values.forEach(TagCanvas::unbind)
     textHighlighter.reset()
     EditorKeyListener.detach(mainEditor)

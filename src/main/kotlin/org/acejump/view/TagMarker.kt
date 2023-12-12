@@ -4,24 +4,17 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.SystemInfo
 import com.intellij.ui.scale.JBUIScale
 import org.acejump.boundaries.EditorOffsetCache
-import org.acejump.boundaries.StandardBoundaries
-import org.acejump.countMatchingCharacters
-import org.acejump.immutableText
 import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.Point
 import java.awt.Rectangle
-import kotlin.math.max
 
 /**
  * Describes a 1 or 2 character shortcut that points to a specific character in the editor.
  */
 internal class TagMarker(
   private val tag: String,
-  val offsetL: Int,
-  val offsetR: Int,
-  private val shiftR: Int,
-  private val hasSpaceRight: Boolean
+  val offset: Int
 ) {
   private val length = tag.length
   
@@ -37,19 +30,15 @@ internal class TagMarker(
     
     /**
      * Creates a new tag, precomputing some information about the nearby characters to reduce rendering overhead. If the last typed
-     * character ([literalQueryText]) matches the first [tag] character, only the second [tag] character is displayed.
+     * character ([typedTag]) matches the first [tag] character, only the second [tag] character is displayed.
      */
-    fun create(editor: Editor, tag: String, offset: Int, literalQueryText: String?): TagMarker {
-      val chars = editor.immutableText
-      val matching = literalQueryText?.let { chars.countMatchingCharacters(offset, it) } ?: 0
-      val hasSpaceRight = offset + 1 >= chars.length || chars[offset + 1].isWhitespace()
-      
-      val displayedTag = if (literalQueryText != null && literalQueryText.last().equals(tag.first(), ignoreCase = true))
+    fun create(tag: String, offset: Int, typedTag: String): TagMarker {
+      val displayedTag = if (typedTag.isNotEmpty() && typedTag.last().equals(tag.first(), ignoreCase = true))
         tag.drop(1).toUpperCase()
       else
         tag.toUpperCase()
       
-      return TagMarker(displayedTag, offset, offset + max(0, matching - 1), tag.length - displayedTag.length, hasSpaceRight)
+      return TagMarker(displayedTag, offset)
     }
     
     /**
@@ -82,14 +71,6 @@ internal class TagMarker(
   }
   
   /**
-   * Returns true if the left-aligned offset is in the range. Use to cull tags outside visible range.
-   * Only the left offset is checked, because if the tag was right-aligned on the last index of the range, it would not be visible anyway.
-   */
-  fun isOffsetInRange(range: IntRange): Boolean {
-    return offsetL in range
-  }
-  
-  /**
    * Paints the tag, taking into consideration visual space around characters in the editor, as well as all other previously painted tags.
    * Returns a rectangle indicating the area where the tag was rendered, or null if the tag could not be rendered due to overlap.
    */
@@ -104,35 +85,8 @@ internal class TagMarker(
   }
   
   private fun alignTag(editor: Editor, cache: EditorOffsetCache, font: TagFont, occupied: List<Rectangle>): Rectangle? {
-    val boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
-    
-    if (hasSpaceRight || offsetL == 0 || editor.immutableText[offsetL - 1].let { it == '\n' || it == '\r' }) {
-      val rectR = createRightAlignedTagRect(editor, cache, font)
-      return rectR.takeIf { boundaries.isOffsetInside(editor, offsetR, cache) && occupied.none(rectR::intersects) }
-    }
-    
-    val rectL = createLeftAlignedTagRect(editor, cache, font)
-    if (occupied.none(rectL::intersects)) {
-      return rectL.takeIf { boundaries.isOffsetInside(editor, offsetL, cache) }
-    }
-    
-    val rectR = createRightAlignedTagRect(editor, cache, font)
-    if (occupied.none(rectR::intersects)) {
-      return rectR.takeIf { boundaries.isOffsetInside(editor, offsetR, cache) }
-    }
-    
-    return null
-  }
-  
-  private fun createRightAlignedTagRect(editor: Editor, cache: EditorOffsetCache, font: TagFont): Rectangle {
-    val pos = cache.offsetToXY(editor, offsetR)
-    val shift = font.editorFontMetrics.charWidth(editor.immutableText[offsetR]) + (font.tagCharWidth * shiftR)
-    return Rectangle(pos.x + shift, pos.y, (font.tagCharWidth * length) + 4, font.lineHeight)
-  }
-  
-  private fun createLeftAlignedTagRect(editor: Editor, cache: EditorOffsetCache, font: TagFont): Rectangle {
-    val pos = cache.offsetToXY(editor, offsetL)
-    val shift = -(font.tagCharWidth * length)
-    return Rectangle(pos.x + shift - 4, pos.y, (font.tagCharWidth * length) + 4, font.lineHeight)
+    val pos = cache.offsetToXY(editor, offset)
+    val rect = Rectangle(pos.x - 2, pos.y, (font.tagCharWidth * length) + 4, font.lineHeight)
+    return rect.takeIf { occupied.none(it::intersects) }
   }
 }

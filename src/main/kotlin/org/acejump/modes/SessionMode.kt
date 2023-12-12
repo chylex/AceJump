@@ -9,5 +9,5 @@ interface SessionMode {
   val caretColor: Color
   
   fun type(state: SessionState, charTyped: Char, acceptedTag: Tag?): TypeResult
-  fun accept(state: SessionState, acceptedTag: Tag): Boolean
+  fun accept(state: SessionState, acceptedTag: Tag)
 }

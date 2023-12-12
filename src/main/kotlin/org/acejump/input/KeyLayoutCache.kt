@@ -34,18 +34,17 @@ internal object KeyLayoutCache {
    */
   fun reset(settings: AceSettings) {
     tagOrder = compareBy(
-      { it[0].isDigit() || it[1].isDigit() },
-      { settings.layout.distanceBetweenKeys(it[0], it[1]) },
-      settings.layout.priority { it[0] }
+      String::length,
+      settings.layout.priority(String::last)
     )
     
+    @Suppress("ConvertLambdaToReference")
     val allPossibleChars = settings.allowedChars
       .toCharArray()
       .filter(Char::isLetterOrDigit)
       .distinct()
-      .joinToString("")
-      .ifEmpty(settings.layout::allChars)
+      .ifEmpty { settings.layout.allChars.toCharArray().toList() }
     
-    allPossibleTags = allPossibleChars.flatMap { a -> allPossibleChars.map { b -> "$a$b".intern() } }.sortedWith(tagOrder)
+    allPossibleTags = allPossibleChars.flatMap { listOf("$it", ";$it") }.sortedWith(tagOrder)
   }
 }

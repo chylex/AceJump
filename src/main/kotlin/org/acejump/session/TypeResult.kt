@@ -1,12 +1,12 @@
 package org.acejump.session
 
 import org.acejump.modes.SessionMode
-import org.acejump.search.SearchProcessor
+import org.acejump.search.Tag
 
 sealed class TypeResult {
   object Nothing : TypeResult()
-  class UpdateResults(val processor: SearchProcessor) : TypeResult()
+  class ChangeState(val state: SessionState) : TypeResult()
   class ChangeMode(val mode: SessionMode) : TypeResult()
-  object RestartSearch : TypeResult()
+  class AcceptTag(val tag: Tag) : TypeResult()
   object EndSession : TypeResult()
 }

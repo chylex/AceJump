@@ -18,8 +18,7 @@ open class JumpMode : SessionMode {
     return state.type(charTyped)
   }
   
-  override fun accept(state: SessionState, acceptedTag: Tag): Boolean {
-    state.act(AceTagAction.JumpToSearchStart, acceptedTag, wasUpperCase, isFinal = true)
-    return true
+  override fun accept(state: SessionState, acceptedTag: Tag) {
+    AceTagAction.JumpToSearchStart.invoke(acceptedTag, shiftMode = wasUpperCase, isFinal = true)
   }
 }

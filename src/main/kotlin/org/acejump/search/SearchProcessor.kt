@@ -3,17 +3,18 @@ package org.acejump.search
 import com.intellij.openapi.editor.Editor
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import org.acejump.boundaries.Boundaries
+import org.acejump.clone
+import org.acejump.config.AceConfig
 import org.acejump.immutableText
-import org.acejump.isWordPart
 import org.acejump.matchesAt
 
 /**
- * Searches editor text for matches of a [SearchQuery], and updates previous results when the user [type]s a character.
+ * Searches editor text for matches of a [SearchQuery], and updates previous results when the user [refineQuery]s a character.
  */
-class SearchProcessor private constructor(query: SearchQuery, results: MutableMap<Editor, IntArrayList>) {
+class SearchProcessor private constructor(query: SearchQuery, private val results: MutableMap<Editor, IntArrayList>) {
   companion object {
-    fun fromChar(editors: List<Editor>, char: Char, boundaries: Boundaries): SearchProcessor {
-      return SearchProcessor(editors, SearchQuery.Literal(char.toString()), boundaries)
+    fun fromString(editors: List<Editor>, query: String, boundaries: Boundaries): SearchProcessor {
+      return SearchProcessor(editors, SearchQuery.Literal(query), boundaries)
     }
     
     fun fromRegex(editors: List<Editor>, pattern: String, boundaries: Boundaries): SearchProcessor {
@@ -53,97 +54,40 @@ class SearchProcessor private constructor(query: SearchQuery, results: MutableMa
   internal var query = query
     private set
   
-  internal var results = results
-    private set
+  val resultsCopy
+    get() = results.clone()
   
-  /**
-   * Appends a character to the search query and removes all search results that no longer match the query. If the last typed character
-   * transitioned the search query from a non-word to a word, it notifies the [Tagger] to reassign all tags. If the new query does not
-   * make sense because it would remove every result, the change is reverted and this function returns false.
-   */
-  fun type(char: Char, tagger: Tagger): Boolean {
-    val newQuery = query.rawText + char
-    val canMatchTag = tagger.canQueryMatchAnyTag(newQuery)
-    
-    // If the typed character is not compatible with any existing tag or as a continuation of any previous occurrence, reject the query
-    // change and return false to indicate that nothing else should happen.
-    
-    if (newQuery.length > 1 && !canMatchTag && !isContinuation(newQuery)) {
-      return false
-    }
-    
-    // If the typed character transitioned the search query from a non-word to a word, and the typed character does not belong to an
-    // existing tag, we basically restart the search at the beginning of every new word, and unmark existing results so that all tags get
-    // regenerated immediately afterwards. Although this causes tags to change, it is one solution for conflicts between tag characters and
-    // search query characters, and moving searches across word boundaries during search should be fairly uncommon.
-    
-    if (!canMatchTag && newQuery.length >= 2 && !newQuery[newQuery.length - 2].isWordPart && char.isWordPart) {
-      query = SearchQuery.Literal(char.toString())
-      tagger.unmark()
-      
-      for ((editor, offsets) in results) {
-        val chars = editor.immutableText
-        val iter = offsets.iterator()
-        
-        while (iter.hasNext()) {
-          val movedOffset = iter.nextInt() + newQuery.length - 1
-          
-          if (movedOffset < chars.length && chars[movedOffset].equals(char, ignoreCase = true)) {
-            iter.set(movedOffset)
-          }
-          else {
-            iter.remove()
-          }
-        }
-      }
+  val isQueryFinished
+    get() = query.rawText.length >= AceConfig.minQueryLength
+  
+  fun refineQuery(char: Char): Boolean {
+    if (char == '\n') {
+      return true
     }
     else {
-      removeObsoleteResults(newQuery, tagger)
-      query = SearchQuery.Literal(newQuery)
+      query = SearchQuery.Literal(query.rawText + char)
+      removeObsoleteResults()
+      return isQueryFinished
     }
-    
-    return true
-  }
-  
-  /**
-   * Returns true if the new query is a continuation of any remaining search query.
-   */
-  private fun isContinuation(newQuery: String): Boolean {
-    for ((editor, offsets) in results) {
-      val chars = editor.immutableText
-      if (offsets.any { chars.matchesAt(it, newQuery, ignoreCase = true) }) {
-        return true
-      }
-    }
-    
-    return false
   }
   
   /**
    * After updating the query, removes all results that no longer match the search query.
    */
-  private fun removeObsoleteResults(newQuery: String, tagger: Tagger) {
-    val lastCharOffset = newQuery.lastIndex
-    val lastChar = newQuery[lastCharOffset]
-    val ignoreCase = newQuery[0].isLowerCase()
+  private fun removeObsoleteResults() {
+    val query = query.rawText
     
-    for ((editor, offsets) in results.entries.toList()) {
-      val chars = editor.immutableText
+    for (entry in results) {
+      val editor = entry.key
+      val offsetIter = entry.value.iterator()
       
-      val remaining = IntArrayList()
-      val iter = offsets.iterator()
-      
-      while (iter.hasNext()) {
-        val offset = iter.nextInt()
-        val endOffset = offset + lastCharOffset
-        val lastTypedCharMatches = endOffset < chars.length && chars[endOffset].equals(lastChar, ignoreCase)
+      while (offsetIter.hasNext()) {
+        val offset = offsetIter.nextInt()
         
-        if (lastTypedCharMatches || tagger.isQueryCompatibleWithTagAt(newQuery, Tag(editor, offset))) {
-          remaining.add(offset)
+        if (!editor.immutableText.matchesAt(offset, query, ignoreCase = true)) {
+          offsetIter.remove()
         }
       }
-      
-      results[editor] = remaining
     }
   }
 }

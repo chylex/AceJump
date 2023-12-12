@@ -18,6 +18,7 @@ import javax.swing.SwingUtilities
  */
 internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListener {
   private var markers: Collection<TagMarker>? = null
+  private var caret = -1
   
   init {
     val contentComponent = editor.contentComponent
@@ -42,6 +43,7 @@ internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListen
    * canvas, but the cost of repainting visible tags is negligible.
    */
   override fun caretPositionChanged(event: CaretEvent) {
+    caret = editor.caretModel.offset
     repaint()
   }
   
@@ -73,18 +75,8 @@ internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListen
     val viewRange = StandardBoundaries.VISIBLE_ON_SCREEN.getOffsetRange(editor, cache)
     val occupied = mutableListOf<Rectangle>()
     
-    // If there is a tag at the caret location, prioritize its rendering over all other tags. This is helpful for seeing which tag is
-    // currently selected while navigating highly clustered tags, although it does end up rearranging nearby tags which can be confusing.
-    
-    // TODO instead of immediately painting, we could calculate the layout of everything first, and then remove tags that interfere with
-    //      the caret tag to avoid changing the alignment of the caret tag
-    
-    val caretOffset = editor.caretModel.offset
-    val caretMarker = markers.find { it.offsetL == caretOffset || it.offsetR == caretOffset }
-    caretMarker?.paint(g, editor, cache, font, occupied)
-    
     for (marker in markers) {
-      if (marker.isOffsetInRange(viewRange) && marker !== caretMarker) {
+      if (marker.offset in viewRange) {
         marker.paint(g, editor, cache, font, occupied)
       }
     }

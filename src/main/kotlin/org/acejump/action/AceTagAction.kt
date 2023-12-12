@@ -13,40 +13,35 @@ import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx
 import com.intellij.openapi.fileEditor.ex.IdeDocumentHistory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.playback.commands.ActionCommand
-import org.acejump.search.SearchProcessor
+import org.acejump.search.Tag
 
 /**
  * Base class for actions available after typing a tag.
  */
 sealed class AceTagAction {
-  abstract operator fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean)
+  abstract operator fun invoke(tag: Tag, shiftMode: Boolean, isFinal: Boolean)
   
   abstract class BaseJumpAction : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
+    override fun invoke(tag: Tag, shiftMode: Boolean, isFinal: Boolean) {
+      val editor = tag.editor
       val caretModel = editor.caretModel
       val oldCarets = if (shiftMode) caretModel.caretsAndSelections else emptyList()
       
-      recordCaretPosition(editor)
+      editor.project?.let { addCurrentPositionToHistory(it, editor.document) }
       
       if (isFinal) {
         ensureEditorFocused(editor)
       }
       
-      moveCaretTo(editor, getCaretOffset(editor, searchProcessor, offset))
+      moveCaretTo(editor, tag.offset)
       
       if (shiftMode) {
         caretModel.caretsAndSelections = oldCarets + caretModel.caretsAndSelections
       }
     }
-    
-    abstract fun getCaretOffset(editor: Editor, searchProcessor: SearchProcessor, offset: Int): Int
   }
   
   private companion object {
-    fun recordCaretPosition(editor: Editor) = with(editor) {
-      project?.let { addCurrentPositionToHistory(it, document) }
-    }
-    
     fun moveCaretTo(editor: Editor, offset: Int) = with(editor) {
       selectionModel.removeSelection(true)
       caretModel.removeSecondaryCarets()
@@ -88,11 +83,7 @@ sealed class AceTagAction {
    * On default action, places the caret at the first character of the search query.
    * On shift action, adds the new caret to existing carets.
    */
-  object JumpToSearchStart : BaseJumpAction() {
-    override fun getCaretOffset(editor: Editor, searchProcessor: SearchProcessor, offset: Int): Int {
-      return offset
-    }
-  }
+  object JumpToSearchStart : BaseJumpAction()
   
   /**
    * On default action, performs the Go To Declaration action, available via `Navigate | Declaration or Usages`.
@@ -100,8 +91,8 @@ sealed class AceTagAction {
    * Always places the caret at the start of the word.
    */
   object GoToDeclaration : AceTagAction() {
-    override fun invoke(editor: Editor, searchProcessor: SearchProcessor, offset: Int, shiftMode: Boolean, isFinal: Boolean) {
-      JumpToSearchStart(editor, searchProcessor, offset, shiftMode = false, isFinal = isFinal)
+    override fun invoke(tag: Tag, shiftMode: Boolean, isFinal: Boolean) {
+      JumpToSearchStart.invoke(tag, shiftMode = false, isFinal = isFinal)
       ApplicationManager.getApplication().invokeLater { performAction(if (shiftMode) IdeActions.ACTION_GOTO_TYPE_DECLARATION else IdeActions.ACTION_GOTO_DECLARATION) }
     }
   }
