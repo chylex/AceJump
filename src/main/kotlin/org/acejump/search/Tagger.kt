@@ -43,17 +43,17 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
       .flatMap { (editor, sites) -> sites.map { site -> Tag(editor, site) } }
       .sortedWith(siteOrder(editors, caches))
     
-    tagMap = KeyLayoutCache.allPossibleTags.zip(tagSites).toMap()
+    tagMap = KeyLayoutCache.allPossibleTagsLowercase.zip(tagSites).toMap()
   }
   
   internal fun type(char: Char): TaggingResult {
-    val newTypedTag = typedTag + char
+    val newTypedTag = typedTag + char.lowercaseChar()
     val matchingTag = tagMap[newTypedTag]
     if (matchingTag != null) {
       return TaggingResult.Accept(matchingTag)
     }
     
-    val newTagMap = tagMap.filter { it.key.startsWith(newTypedTag, ignoreCase = true) }
+    val newTagMap = tagMap.filter { it.key.startsWith(newTypedTag) }
     if (newTagMap.isEmpty()) {
       return TaggingResult.Nothing
     }

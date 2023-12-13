@@ -17,7 +17,7 @@ internal object KeyLayoutCache {
   /**
    * Returns all possible two key tags, pre-sorted according to [tagOrder].
    */
-  lateinit var allPossibleTags: List<String>
+  lateinit var allPossibleTagsLowercase: List<String>
     private set
   
   /**
@@ -45,6 +45,6 @@ internal object KeyLayoutCache {
       .distinct()
       .ifEmpty { settings.layout.allChars.toCharArray().toList() }
     
-    allPossibleTags = allPossibleChars.flatMap { listOf("$it", ";$it") }.sortedWith(tagOrder)
+    allPossibleTagsLowercase = allPossibleChars.flatMap { listOf("$it", ";$it") }.sortedWith(tagOrder)
   }
 }
