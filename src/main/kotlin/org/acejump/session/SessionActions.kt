@@ -6,6 +6,8 @@ import org.acejump.search.SearchQuery
 import org.acejump.view.TagMarker
 
 internal interface SessionActions {
-  fun highlight(results: Map<Editor, IntList>, query: SearchQuery)
-  fun tag(markers: Map<Editor, Collection<TagMarker>>)
+  fun showHighlights(results: Map<Editor, IntList>, query: SearchQuery)
+  fun hideHighlights()
+  
+  fun setTagMarkers(markers: Map<Editor, Collection<TagMarker>>)
 }

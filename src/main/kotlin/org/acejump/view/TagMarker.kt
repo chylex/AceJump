@@ -2,7 +2,6 @@ package org.acejump.view
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.SystemInfo
-import com.intellij.ui.scale.JBUIScale
 import org.acejump.boundaries.EditorOffsetCache
 import java.awt.Color
 import java.awt.Graphics2D
@@ -19,14 +18,10 @@ internal class TagMarker(
   private val length = tag.length
   
   companion object {
-    private const val ARC = 1
-    
     /**
      * TODO This might be due to DPI settings.
      */
     private val HIGHLIGHT_OFFSET = if (SystemInfo.isMac) -0.5 else 0.0
-    
-    private val SHADOW_COLOR = Color(0F, 0F, 0F, 0.35F)
     
     /**
      * Creates a new tag, precomputing some information about the nearby characters to reduce rendering overhead. If the last typed
@@ -34,9 +29,9 @@ internal class TagMarker(
      */
     fun create(tag: String, offset: Int, typedTag: String): TagMarker {
       val displayedTag = if (typedTag.isNotEmpty() && typedTag.last().equals(tag.first(), ignoreCase = true))
-        tag.drop(1).toUpperCase()
+        tag.drop(1).uppercase()
       else
-        tag.toUpperCase()
+        tag.uppercase()
       
       return TagMarker(displayedTag, offset)
     }
@@ -47,7 +42,7 @@ internal class TagMarker(
     private fun drawHighlight(g: Graphics2D, rect: Rectangle, color: Color) {
       g.color = color
       g.translate(0.0, HIGHLIGHT_OFFSET)
-      g.fillRoundRect(rect.x, rect.y, rect.width, rect.height + 1, ARC, ARC)
+      g.fillRect(rect.x, rect.y, rect.width, rect.height + 1)
       g.translate(0.0, -HIGHLIGHT_OFFSET)
     }
     
@@ -55,18 +50,9 @@ internal class TagMarker(
      * Renders the tag text.
      */
     private fun drawForeground(g: Graphics2D, font: TagFont, point: Point, text: String) {
-      val x = point.x + 2
-      val y = point.y + font.baselineDistance
-      
-      g.font = font.tagFont
-      
-      if (!font.isForegroundDark) {
-        g.color = SHADOW_COLOR
-        g.drawString(text, x + 1, y + 1)
-      }
-      
       g.color = font.foregroundColor
-      g.drawString(text, x, y)
+      g.font = font.tagFont
+      g.drawString(text, point.x, point.y + font.baselineDistance)
     }
   }
   
@@ -77,16 +63,16 @@ internal class TagMarker(
   fun paint(g: Graphics2D, editor: Editor, cache: EditorOffsetCache, font: TagFont, occupied: MutableList<Rectangle>): Rectangle? {
     val rect = alignTag(editor, cache, font, occupied) ?: return null
     
-    drawHighlight(g, rect, font.backgroundColor)
+    drawHighlight(g, rect, editor.colorsScheme.defaultBackground)
     drawForeground(g, font, rect.location, tag)
     
-    occupied.add(JBUIScale.scale(2).let { Rectangle(rect.x - it, rect.y, rect.width + (2 * it), rect.height) })
+    occupied.add(rect)
     return rect
   }
   
   private fun alignTag(editor: Editor, cache: EditorOffsetCache, font: TagFont, occupied: List<Rectangle>): Rectangle? {
     val pos = cache.offsetToXY(editor, offset)
-    val rect = Rectangle(pos.x - 2, pos.y, (font.tagCharWidth * length) + 4, font.lineHeight)
+    val rect = Rectangle(pos.x, pos.y, font.tagCharWidth * length, font.lineHeight)
     return rect.takeIf { occupied.none(it::intersects) }
   }
 }

@@ -13,15 +13,9 @@ data class AceSettings(
   @OptionTag("jumpModeRGB", converter = ColorConverter::class)
   var jumpModeColor: Color = Color(0xFFFFFF),
   
-  @OptionTag("textHighlightRGB", converter = ColorConverter::class)
-  var textHighlightColor: Color = Color(0x394B58),
-  
   @OptionTag("tagForegroundRGB", converter = ColorConverter::class)
   var tagForegroundColor: Color = Color(0xFFFFFF),
   
-  @OptionTag("tagBackgroundRGB", converter = ColorConverter::class)
-  var tagBackgroundColor: Color = Color(0x008299),
-  
-  @OptionTag("acceptedTagRGB", converter = ColorConverter::class)
-  var acceptedTagColor: Color = Color(0x394B58)
+  @OptionTag("searchHighlightRGB", converter = ColorConverter::class)
+  var searchHighlightColor: Color = Color(0x008299),
 )

@@ -21,10 +21,8 @@ class AceConfig : PersistentStateComponent<AceSettings> {
     val layout get() = settings.layout
     val minQueryLength get() = settings.minQueryLength
     val jumpModeColor get() = settings.jumpModeColor
-    val textHighlightColor get() = settings.textHighlightColor
     val tagForegroundColor get() = settings.tagForegroundColor
-    val tagBackgroundColor get() = settings.tagBackgroundColor
-    val acceptedTagColor get() = settings.acceptedTagColor
+    val searchHighlightColor get() = settings.searchHighlightColor
   }
   
   override fun getState(): AceSettings {

@@ -27,10 +27,8 @@ internal class AceSettingsPanel {
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
   private val jumpModeColorWheel = ColorPanel()
-  private val textHighlightColorWheel = ColorPanel()
   private val tagForegroundColorWheel = ColorPanel()
-  private val tagBackgroundColorWheel = ColorPanel()
-  private val acceptedTagColorWheel = ColorPanel()
+  private val searchHighlightColorWheel = ColorPanel()
   
   init {
     tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
@@ -54,10 +52,8 @@ internal class AceSettingsPanel {
     
     titledRow("Colors") {
       row("Caret background:") { short(jumpModeColorWheel) }
-      row("Searched text background:") { short(textHighlightColorWheel) }
       row("Tag foreground:") { short(tagForegroundColorWheel) }
-      row("Tag background:") { short(tagBackgroundColorWheel) }
-      row("Accepted tag position background:") { short(acceptedTagColorWheel) }
+      row("Search highlight:") { short(searchHighlightColorWheel) }
     }
   }
   
@@ -67,10 +63,8 @@ internal class AceSettingsPanel {
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
   internal var jumpModeColor by jumpModeColorWheel
-  internal var textHighlightColor by textHighlightColorWheel
   internal var tagForegroundColor by tagForegroundColorWheel
-  internal var tagBackgroundColor by tagBackgroundColorWheel
-  internal var acceptedTagColor by acceptedTagColorWheel
+  internal var searchHighlightColor by searchHighlightColorWheel
   
   internal var minQueryLengthInt
     get() = minQueryLength.toIntOrNull()?.coerceIn(1, 10)
@@ -81,10 +75,8 @@ internal class AceSettingsPanel {
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
     jumpModeColor = settings.jumpModeColor
-    textHighlightColor = settings.textHighlightColor
     tagForegroundColor = settings.tagForegroundColor
-    tagBackgroundColor = settings.tagBackgroundColor
-    acceptedTagColor = settings.acceptedTagColor
+    searchHighlightColor = settings.searchHighlightColor
   }
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575

@@ -2,8 +2,7 @@ package org.acejump.view
 
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.editor.Editor
-import com.intellij.openapi.editor.event.CaretEvent
-import com.intellij.openapi.editor.event.CaretListener
+import com.intellij.ui.ColorUtil
 import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries
 import java.awt.Graphics
@@ -16,9 +15,9 @@ import javax.swing.SwingUtilities
 /**
  * Holds all active tag markers and renders them on top of the editor.
  */
-internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListener {
-  private var markers: Collection<TagMarker>? = null
-  private var caret = -1
+internal class TagCanvas(private val editor: Editor) : JComponent() {
+  private var markers: Collection<TagMarker> = emptyList()
+  private var visible = false
   
   init {
     val contentComponent = editor.contentComponent
@@ -28,44 +27,38 @@ internal class TagCanvas(private val editor: Editor) : JComponent(), CaretListen
     if (ApplicationInfo.getInstance().build.components.first() < 173) {
       SwingUtilities.convertPoint(this, location, editor.component.rootPane).let { setLocation(-it.x, -it.y) }
     }
-    
-    editor.caretModel.addCaretListener(this)
   }
   
   fun unbind() {
-    markers = null
     editor.contentComponent.remove(this)
-    editor.caretModel.removeCaretListener(this)
-  }
-  
-  /**
-   * Ensures that all tags and the outline around the selected tag are repainted. It should not be necessary to repaint the entire tag
-   * canvas, but the cost of repainting visible tags is negligible.
-   */
-  override fun caretPositionChanged(event: CaretEvent) {
-    caret = editor.caretModel.offset
-    repaint()
+    editor.contentComponent.repaint()
   }
   
   fun setMarkers(markers: Collection<TagMarker>) {
     this.markers = markers
+    this.visible = true
     repaint()
   }
   
   fun removeMarkers() {
     this.markers = emptyList()
-  }
-  
-  override fun paint(g: Graphics) {
-    if (!markers.isNullOrEmpty()) {
-      super.paint(g)
-    }
+    this.visible = false
+    repaint()
   }
   
   override fun paintChildren(g: Graphics) {
     super.paintChildren(g)
     
-    val markers = markers ?: return
+    if (!visible) {
+      return
+    }
+    
+    g.color = ColorUtil.withAlpha(editor.colorsScheme.defaultBackground, 0.6)
+    g.fillRect(0, 0, width - 1, height - 1)
+    
+    if (markers.isEmpty()) {
+      return
+    }
     
     (g as Graphics2D).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
     

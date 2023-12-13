@@ -16,20 +16,16 @@ class AceConfigurable : Configurable {
       panel.keyboardLayout != settings.layout ||
       panel.minQueryLengthInt != settings.minQueryLength ||
       panel.jumpModeColor != settings.jumpModeColor ||
-      panel.textHighlightColor != settings.textHighlightColor ||
       panel.tagForegroundColor != settings.tagForegroundColor ||
-      panel.tagBackgroundColor != settings.tagBackgroundColor ||
-      panel.acceptedTagColor != settings.acceptedTagColor
+      panel.searchHighlightColor != settings.searchHighlightColor
   
   override fun apply() {
     settings.allowedChars = panel.allowedChars
     settings.layout = panel.keyboardLayout
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
-    panel.textHighlightColor?.let { settings.textHighlightColor = it }
     panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
-    panel.tagBackgroundColor?.let { settings.tagBackgroundColor = it }
-    panel.acceptedTagColor?.let { settings.acceptedTagColor = it }
+    panel.searchHighlightColor?.let { settings.searchHighlightColor = it }
     KeyLayoutCache.reset(settings)
   }
   

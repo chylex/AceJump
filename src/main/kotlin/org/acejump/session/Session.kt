@@ -51,11 +51,15 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
   var defaultBoundary: Boundaries = StandardBoundaries.VISIBLE_ON_SCREEN
   
   private val actions = object : SessionActions {
-    override fun highlight(results: Map<Editor, IntList>, query: SearchQuery) {
+    override fun showHighlights(results: Map<Editor, IntList>, query: SearchQuery) {
       textHighlighter.renderOccurrences(results, query)
     }
     
-    override fun tag(markers: Map<Editor, Collection<TagMarker>>) {
+    override fun hideHighlights() {
+      textHighlighter.reset()
+    }
+    
+    override fun setTagMarkers(markers: Map<Editor, Collection<TagMarker>>) {
       for ((editor, canvas) in tagCanvases) {
         canvas.setMarkers(markers[editor].orEmpty())
       }

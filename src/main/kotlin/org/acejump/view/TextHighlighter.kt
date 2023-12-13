@@ -6,13 +6,12 @@ import com.intellij.openapi.editor.markup.CustomHighlighterRenderer
 import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.HighlighterTargetArea
 import com.intellij.openapi.editor.markup.RangeHighlighter
-import it.unimi.dsi.fastutil.ints.IntArrayList
+import com.intellij.ui.ColorUtil
 import it.unimi.dsi.fastutil.ints.IntList
 import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.config.AceConfig
 import org.acejump.immutableText
 import org.acejump.search.SearchQuery
-import org.acejump.search.Tag
 import java.awt.Color
 import java.awt.Graphics
 
@@ -30,13 +29,6 @@ internal class TextHighlighter {
       is SearchQuery.RegularExpression -> RegexRenderer
       else                             -> SearchedWordRenderer
     }, query::getHighlightLength)
-  }
-  
-  /**
-   * Removes all current highlights and re-adds a single highlight at the position of the accepted tag with a different color.
-   */
-  fun renderFinal(tag: Tag, query: SearchQuery) {
-    render(mutableMapOf(tag.editor to IntArrayList(intArrayOf(tag.offset))), AcceptedTagRenderer, query::getHighlightLength)
   }
   
   private inline fun render(results: Map<Editor, IntList>, renderer: CustomHighlighterRenderer, getHighlightLength: (CharSequence, Int) -> Int) {
@@ -88,7 +80,7 @@ internal class TextHighlighter {
    */
   private object SearchedWordRenderer : CustomHighlighterRenderer {
     override fun paint(editor: Editor, highlighter: RangeHighlighter, g: Graphics) {
-      drawFilled(g, editor, highlighter.startOffset, highlighter.endOffset, AceConfig.textHighlightColor)
+      drawFilled(g, editor, highlighter.startOffset, highlighter.endOffset, AceConfig.searchHighlightColor)
     }
   }
   
@@ -97,16 +89,7 @@ internal class TextHighlighter {
    */
   private object RegexRenderer : CustomHighlighterRenderer {
     override fun paint(editor: Editor, highlighter: RangeHighlighter, g: Graphics) {
-      drawSingle(g, editor, highlighter.startOffset, AceConfig.textHighlightColor)
-    }
-  }
-  
-  /**
-   * Renders a filled highlight in the background of the accepted tag position and search query.
-   */
-  private object AcceptedTagRenderer : CustomHighlighterRenderer {
-    override fun paint(editor: Editor, highlighter: RangeHighlighter, g: Graphics) {
-      drawFilled(g, editor, highlighter.startOffset, highlighter.endOffset, AceConfig.acceptedTagColor)
+      drawSingle(g, editor, highlighter.startOffset, AceConfig.searchHighlightColor)
     }
   }
   
@@ -117,10 +100,10 @@ internal class TextHighlighter {
       val start = EditorOffsetCache.Uncached.offsetToXY(editor, startOffset)
       val end = EditorOffsetCache.Uncached.offsetToXY(editor, endOffset)
       
-      g.color = color
+      g.color = ColorUtil.withAlpha(AceConfig.searchHighlightColor, 0.2)
       g.fillRect(start.x, start.y + 1, end.x - start.x, editor.lineHeight - 1)
       
-      g.color = AceConfig.tagBackgroundColor
+      g.color = color
       g.drawRect(start.x, start.y, end.x - start.x, editor.lineHeight)
     }
     
@@ -130,10 +113,10 @@ internal class TextHighlighter {
       val font = editor.colorsScheme.getFont(EditorFontType.PLAIN)
       val lastCharWidth = editor.component.getFontMetrics(font).charWidth(char)
       
-      g.color = color
+      g.color = ColorUtil.withAlpha(AceConfig.searchHighlightColor, 0.2)
       g.fillRect(pos.x, pos.y + 1, lastCharWidth, editor.lineHeight - 1)
       
-      g.color = AceConfig.tagBackgroundColor
+      g.color = color
       g.drawRect(pos.x, pos.y, lastCharWidth, editor.lineHeight)
     }
   }
