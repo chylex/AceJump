@@ -24,7 +24,7 @@
                          implementationClass="org.acejump.action.AceEditorAction$Reset"/>
     <editorActionHandler action="EditorBackSpace" order="first"
                          implementationClass="org.acejump.action.AceEditorAction$ClearSearch"/>
-    <editorActionHandler action="EditorEnter" order="first"
+    <editorActionHandler action="EditorEnter" order="first, before terminalEnter"
                          implementationClass="org.acejump.action.AceEditorAction$TagImmediately"/>
   </extensions>
   
