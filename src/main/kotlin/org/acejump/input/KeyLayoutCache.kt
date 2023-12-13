@@ -39,12 +39,15 @@ internal object KeyLayoutCache {
     )
     
     @Suppress("ConvertLambdaToReference")
-    val allPossibleChars = settings.allowedChars
-      .toCharArray()
-      .filter(Char::isLetterOrDigit)
-      .distinct()
-      .ifEmpty { settings.layout.allChars.toCharArray().toList() }
+    val allSuffixChars = processCharList(settings.allowedChars).ifEmpty { processCharList(settings.layout.allChars).toList() }
+    val allPrefixChars = processCharList(settings.prefixChars).filterNot(allSuffixChars::contains).plus("")
     
-    allPossibleTagsLowercase = allPossibleChars.flatMap { listOf("$it", ";$it") }.sortedWith(tagOrder)
+    allPossibleTagsLowercase = allSuffixChars
+      .flatMap { suffix -> allPrefixChars.map { prefix -> "$prefix$suffix" } }
+      .sortedWith(tagOrder)
+  }
+  
+  private fun processCharList(charList: String): Set<String> {
+    return charList.toCharArray().map(Char::lowercase).toSet()
   }
 }

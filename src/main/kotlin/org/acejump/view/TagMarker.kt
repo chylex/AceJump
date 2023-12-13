@@ -28,12 +28,7 @@ internal class TagMarker(
      * character ([typedTag]) matches the first [tag] character, only the second [tag] character is displayed.
      */
     fun create(tag: String, offset: Int, typedTag: String): TagMarker {
-      val displayedTag = if (typedTag.isNotEmpty() && typedTag.last().equals(tag.first(), ignoreCase = true))
-        tag.drop(1).uppercase()
-      else
-        tag.uppercase()
-      
-      return TagMarker(displayedTag, offset)
+      return TagMarker(tag.drop(typedTag.length), offset)
     }
     
     /**

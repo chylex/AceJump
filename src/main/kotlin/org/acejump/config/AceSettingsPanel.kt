@@ -22,7 +22,8 @@ import kotlin.reflect.KProperty
  */
 @Suppress("UsePropertyAccessSyntax")
 internal class AceSettingsPanel {
-  private val tagCharsField = JBTextField()
+  private val tagAllowedCharsField = JBTextField()
+  private val tagPrefixCharsField = JBTextField()
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
@@ -31,7 +32,8 @@ internal class AceSettingsPanel {
   private val searchHighlightColorWheel = ColorPanel()
   
   init {
-    tagCharsField.apply { font = Font("monospaced", font.style, font.size) }
+    tagAllowedCharsField.apply { font = Font("monospaced", font.style, font.size) }
+    tagPrefixCharsField.apply { font = Font("monospaced", font.style, font.size) }
     keyboardLayoutArea.apply { font = Font("monospaced", font.style, font.size) }
     keyboardLayoutCombo.setupEnumItems { keyChars = it.rows.joinToString("\n") }
   }
@@ -41,7 +43,8 @@ internal class AceSettingsPanel {
     fun Cell.medium(component: JComponent) = component(growPolicy = MEDIUM_TEXT)
     
     titledRow("Characters and Layout") {
-      row("Allowed characters in tags:") { medium(tagCharsField) }
+      row("Allowed characters in tags:") { medium(tagAllowedCharsField) }
+      row("Allowed prefix characters in tags:") { medium(tagPrefixCharsField) }
       row("Keyboard layout:") { short(keyboardLayoutCombo) }
       row("Keyboard design:") { short(keyboardLayoutArea) }
     }
@@ -58,7 +61,8 @@ internal class AceSettingsPanel {
   }
   
   // Property-to-property delegation: https://stackoverflow.com/q/45074596/1772342
-  internal var allowedChars by tagCharsField
+  internal var allowedChars by tagAllowedCharsField
+  internal var prefixChars by tagPrefixCharsField
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
@@ -72,6 +76,7 @@ internal class AceSettingsPanel {
   
   fun reset(settings: AceSettings) {
     allowedChars = settings.allowedChars
+    prefixChars = settings.prefixChars
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
     jumpModeColor = settings.jumpModeColor

@@ -13,6 +13,7 @@ class AceConfigurable : Configurable {
   
   override fun isModified() =
     panel.allowedChars != settings.allowedChars ||
+      panel.prefixChars != settings.prefixChars ||
       panel.keyboardLayout != settings.layout ||
       panel.minQueryLengthInt != settings.minQueryLength ||
       panel.jumpModeColor != settings.jumpModeColor ||
@@ -21,6 +22,7 @@ class AceConfigurable : Configurable {
   
   override fun apply() {
     settings.allowedChars = panel.allowedChars
+    settings.prefixChars = panel.prefixChars
     settings.layout = panel.keyboardLayout
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
