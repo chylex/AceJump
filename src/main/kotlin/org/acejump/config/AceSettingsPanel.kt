@@ -28,7 +28,8 @@ internal class AceSettingsPanel {
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
   private val jumpModeColorWheel = ColorPanel()
-  private val tagForegroundColorWheel = ColorPanel()
+  private val tagForeground1ColorWheel = ColorPanel()
+  private val tagForeground2ColorWheel = ColorPanel()
   private val searchHighlightColorWheel = ColorPanel()
   
   init {
@@ -54,9 +55,22 @@ internal class AceSettingsPanel {
     }
     
     titledRow("Colors") {
-      row("Caret background:") { short(jumpModeColorWheel) }
-      row("Tag foreground:") { short(tagForegroundColorWheel) }
-      row("Search highlight:") { short(searchHighlightColorWheel) }
+      row("Caret background:") {
+        cell {
+          component(jumpModeColorWheel)
+        }
+      }
+      row("Tag foreground:") {
+        cell {
+          component(tagForeground1ColorWheel)
+          component(tagForeground2ColorWheel)
+        }
+      }
+      row("Search highlight:") {
+        cell {
+          component(searchHighlightColorWheel)
+        }
+      }
     }
   }
   
@@ -67,7 +81,8 @@ internal class AceSettingsPanel {
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
   internal var jumpModeColor by jumpModeColorWheel
-  internal var tagForegroundColor by tagForegroundColorWheel
+  internal var tagForegroundColor1 by tagForeground1ColorWheel
+  internal var tagForegroundColor2 by tagForeground2ColorWheel
   internal var searchHighlightColor by searchHighlightColorWheel
   
   internal var minQueryLengthInt
@@ -80,7 +95,8 @@ internal class AceSettingsPanel {
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
     jumpModeColor = settings.jumpModeColor
-    tagForegroundColor = settings.tagForegroundColor
+    tagForegroundColor1 = settings.tagForegroundColor1
+    tagForegroundColor2 = settings.tagForegroundColor2
     searchHighlightColor = settings.searchHighlightColor
   }
   

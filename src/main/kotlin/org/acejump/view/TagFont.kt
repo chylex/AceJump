@@ -12,7 +12,8 @@ internal class TagFont(editor: Editor) {
   val tagFont: Font = editor.colorsScheme.getFont(EditorFontType.PLAIN)
   val tagCharWidth = editor.component.getFontMetrics(tagFont).charWidth('W')
   
-  val foregroundColor = AceConfig.tagForegroundColor
+  val foregroundColor1 = AceConfig.tagForegroundColor1
+  val foregroundColor2 = AceConfig.tagForegroundColor2
   
   val lineHeight = editor.lineHeight
   val baselineDistance = editor.ascent

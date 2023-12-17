@@ -17,7 +17,8 @@ class AceConfigurable : Configurable {
       panel.keyboardLayout != settings.layout ||
       panel.minQueryLengthInt != settings.minQueryLength ||
       panel.jumpModeColor != settings.jumpModeColor ||
-      panel.tagForegroundColor != settings.tagForegroundColor ||
+      panel.tagForegroundColor1 != settings.tagForegroundColor1 ||
+      panel.tagForegroundColor2 != settings.tagForegroundColor2 ||
       panel.searchHighlightColor != settings.searchHighlightColor
   
   override fun apply() {
@@ -26,7 +27,8 @@ class AceConfigurable : Configurable {
     settings.layout = panel.keyboardLayout
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
-    panel.tagForegroundColor?.let { settings.tagForegroundColor = it }
+    panel.tagForegroundColor1?.let { settings.tagForegroundColor1 = it }
+    panel.tagForegroundColor2?.let { settings.tagForegroundColor2 = it }
     panel.searchHighlightColor?.let { settings.searchHighlightColor = it }
     KeyLayoutCache.reset(settings)
   }
