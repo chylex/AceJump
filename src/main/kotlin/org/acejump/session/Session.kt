@@ -75,7 +75,7 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
     val state = state ?: return
     
     editorSettings.startEditing(editor)
-    val result = mode.type(state, charTyped, acceptedTag)
+    val result = mode.type(state, AceConfig.layout.characterRemapping.getOrDefault(charTyped, charTyped), acceptedTag)
     editorSettings.stopEditing(editor)
     
     when (result) {
