@@ -5,13 +5,10 @@ import com.intellij.openapi.editor.Editor
 import it.unimi.dsi.fastutil.ints.IntList
 import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries.VISIBLE_ON_SCREEN
-import org.acejump.immutableText
 import org.acejump.input.KeyLayoutCache
-import org.acejump.isWordPart
 import org.acejump.view.TagMarker
 import kotlin.collections.component1
 import kotlin.collections.component2
-import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -92,26 +89,24 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
         return@Comparator if (aEditorIndex < bEditorIndex) -1 else 1
       }
       
-      val aIsVisible = VISIBLE_ON_SCREEN.isOffsetInside(aEditor, a.offset, caches.getValue(aEditor))
-      val bIsVisible = VISIBLE_ON_SCREEN.isOffsetInside(bEditor, b.offset, caches.getValue(bEditor))
+      val aCaches = caches.getValue(aEditor)
+      val bCaches = caches.getValue(bEditor)
+      
+      val aIsVisible = VISIBLE_ON_SCREEN.isOffsetInside(aEditor, a.offset, aCaches)
+      val bIsVisible = VISIBLE_ON_SCREEN.isOffsetInside(bEditor, b.offset, bCaches)
       if (aIsVisible != bIsVisible) {
         // Sites in immediate view should come first.
         return@Comparator if (aIsVisible) -1 else 1
       }
       
-      val aIsNotWordStart = aEditor.immutableText[max(0, a.offset - 1)].isWordPart
-      val bIsNotWordStart = bEditor.immutableText[max(0, b.offset - 1)].isWordPart
-      if (aIsNotWordStart != bIsNotWordStart) {
-        // Ensure that the first letter of a word is prioritized for tagging.
-        return@Comparator if (bIsNotWordStart) -1 else 1
-      }
+      val aPosition = aCaches.offsetToXY(aEditor, a.offset)
+      val bPosition = bCaches.offsetToXY(bEditor, b.offset)
       
-      when {
-        a.offset < b.offset -> -1
-        a.offset > b.offset -> 1
-        else                -> 0
-      }
+      val caretPosition = editorPriority[0].offsetToXY(editorPriority[0].caretModel.offset)
+      val aDistance = aPosition.distanceSq(caretPosition)
+      val bDistance = bPosition.distanceSq(caretPosition)
+      
+      return@Comparator aDistance.compareTo(bDistance)
     }
-    
   }
 }
