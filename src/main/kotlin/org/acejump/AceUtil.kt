@@ -7,8 +7,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.util.IncorrectOperationException
 import it.unimi.dsi.fastutil.ints.IntArrayList
 
-annotation class ExternalUsage
-
 /**
  * Returns an immutable version of the currently edited document.
  */
@@ -50,57 +48,6 @@ fun CharSequence.countMatchingCharacters(selfOffset: Int, otherText: String): In
   }
   
   return i
-}
-
-/**
- * Determines which characters form a "word" for the purposes of functions below.
- */
-val Char.isWordPart
-  get() = this in 'a'..'z' || this.isJavaIdentifierPart()
-
-/**
- * Finds index of the first character in a word.
- */
-inline fun CharSequence.wordStart(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
-  var start = pos
-  
-  while (start > 0 && isPartOfWord(this[start - 1])) {
-    --start
-  }
-  
-  return start
-}
-
-/**
- * Finds index of the last character in a word.
- */
-inline fun CharSequence.wordEnd(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
-  var end = pos
-  val limit = length - 1
-  
-  while (end < limit && isPartOfWord(this[end + 1])) {
-    ++end
-  }
-  
-  return end
-}
-
-/**
- * Finds index of the first word character following a sequence of non-word characters following the end of a word.
- */
-inline fun CharSequence.wordEndPlus(pos: Int, isPartOfWord: (Char) -> Boolean = Char::isWordPart): Int {
-  var end = this.wordEnd(pos, isPartOfWord)
-  val limit = length - 1
-  
-  while (end < limit && !isPartOfWord(this[end + 1])) {
-    ++end
-  }
-  
-  if (end < limit && isPartOfWord(this[end + 1])) {
-    ++end
-  }
-  
-  return end
 }
 
 fun MutableMap<Editor, IntArrayList>.clone(): MutableMap<Editor, IntArrayList> {
