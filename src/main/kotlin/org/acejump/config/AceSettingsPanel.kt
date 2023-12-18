@@ -2,6 +2,7 @@ package org.acejump.config
 
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.ColorPanel
+import com.intellij.ui.components.JBSlider
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
 import com.intellij.ui.layout.Cell
@@ -11,9 +12,12 @@ import com.intellij.ui.layout.panel
 import org.acejump.input.KeyLayout
 import java.awt.Color
 import java.awt.Font
+import java.util.Hashtable
 import javax.swing.JCheckBox
 import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.JSlider
 import javax.swing.text.JTextComponent
 import kotlin.reflect.KProperty
 
@@ -27,6 +31,14 @@ internal class AceSettingsPanel {
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
+  private val editorFadeOpacitySlider = JBSlider(0, 10).apply {
+    labelTable = Hashtable((0..10).associateWith { JLabel("${it * 10}") })
+    paintTrack = true
+    paintLabels = true
+    paintTicks = true
+    minorTickSpacing = 1
+    majorTickSpacing = 1
+  }
   private val jumpModeColorWheel = ColorPanel()
   private val tagForeground1ColorWheel = ColorPanel()
   private val tagForeground2ColorWheel = ColorPanel()
@@ -71,6 +83,9 @@ internal class AceSettingsPanel {
           component(searchHighlightColorWheel)
         }
       }
+      row("Editor fade opacity (%):") {
+        medium(editorFadeOpacitySlider)
+      }
     }
   }
   
@@ -80,6 +95,7 @@ internal class AceSettingsPanel {
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
+  internal var editorFadeOpacity by editorFadeOpacitySlider
   internal var jumpModeColor by jumpModeColorWheel
   internal var tagForegroundColor1 by tagForeground1ColorWheel
   internal var tagForegroundColor2 by tagForeground2ColorWheel
@@ -89,11 +105,16 @@ internal class AceSettingsPanel {
     get() = minQueryLength.toIntOrNull()?.coerceIn(1, 10)
     set(value) { minQueryLength = value.toString() }
   
+  internal var editorFadeOpacityPercent
+    get() = editorFadeOpacity * 10
+    set(value) { editorFadeOpacity = value / 10 }
+  
   fun reset(settings: AceSettings) {
     allowedChars = settings.allowedChars
     prefixChars = settings.prefixChars
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
+    editorFadeOpacityPercent = settings.editorFadeOpacity
     jumpModeColor = settings.jumpModeColor
     tagForegroundColor1 = settings.tagForegroundColor1
     tagForegroundColor2 = settings.tagForegroundColor2
@@ -110,6 +131,9 @@ internal class AceSettingsPanel {
   
   private operator fun JCheckBox.getValue(a: AceSettingsPanel, p: KProperty<*>) = isSelected
   private operator fun JCheckBox.setValue(a: AceSettingsPanel, p: KProperty<*>, selected: Boolean) = setSelected(selected)
+  
+  private operator fun JSlider.getValue(a: AceSettingsPanel, p: KProperty<*>) = value
+  private operator fun JSlider.setValue(a: AceSettingsPanel, p: KProperty<*>, value: Int) = setValue(value)
   
   private operator fun <T> ComboBox<T>.getValue(a: AceSettingsPanel, p: KProperty<*>) = selectedItem as T
   private operator fun <T> ComboBox<T>.setValue(a: AceSettingsPanel, p: KProperty<*>, item: T) = setSelectedItem(item)

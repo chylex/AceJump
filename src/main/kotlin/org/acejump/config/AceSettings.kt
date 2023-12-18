@@ -10,6 +10,7 @@ data class AceSettings(
   var allowedChars: String = layout.allChars,
   var prefixChars: String = ";",
   var minQueryLength: Int = 1,
+  var editorFadeOpacity: Int = 70,
   
   @OptionTag("jumpModeRGB", converter = ColorConverter::class)
   var jumpModeColor: Color = Color(0xFFFFFF),

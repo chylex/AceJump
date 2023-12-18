@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.ui.ColorUtil
 import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries
+import org.acejump.config.AceConfig
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.Rectangle
@@ -53,7 +54,7 @@ internal class TagCanvas(private val editor: Editor) : JComponent() {
       return
     }
     
-    g.color = ColorUtil.withAlpha(editor.colorsScheme.defaultBackground, 0.6)
+    g.color = ColorUtil.withAlpha(editor.colorsScheme.defaultBackground, (AceConfig.editorFadeOpacity * 0.01).coerceIn(0.0, 1.0))
     g.fillRect(0, 0, width - 1, height - 1)
     
     if (markers.isEmpty()) {

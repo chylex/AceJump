@@ -20,6 +20,7 @@ class AceConfig : PersistentStateComponent<AceSettings> {
     
     val layout get() = settings.layout
     val minQueryLength get() = settings.minQueryLength
+    val editorFadeOpacity get() = settings.editorFadeOpacity
     val jumpModeColor get() = settings.jumpModeColor
     val tagForegroundColor1 get() = settings.tagForegroundColor1
     val tagForegroundColor2 get() = settings.tagForegroundColor2

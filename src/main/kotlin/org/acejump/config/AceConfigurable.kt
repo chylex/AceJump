@@ -16,6 +16,7 @@ class AceConfigurable : Configurable {
       panel.prefixChars != settings.prefixChars ||
       panel.keyboardLayout != settings.layout ||
       panel.minQueryLengthInt != settings.minQueryLength ||
+      panel.editorFadeOpacityPercent != settings.editorFadeOpacity ||
       panel.jumpModeColor != settings.jumpModeColor ||
       panel.tagForegroundColor1 != settings.tagForegroundColor1 ||
       panel.tagForegroundColor2 != settings.tagForegroundColor2 ||
@@ -26,6 +27,7 @@ class AceConfigurable : Configurable {
     settings.prefixChars = panel.prefixChars
     settings.layout = panel.keyboardLayout
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
+    settings.editorFadeOpacity = panel.editorFadeOpacityPercent
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
     panel.tagForegroundColor1?.let { settings.tagForegroundColor1 = it }
     panel.tagForegroundColor2?.let { settings.tagForegroundColor2 = it }
