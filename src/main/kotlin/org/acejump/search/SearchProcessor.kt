@@ -39,7 +39,7 @@ class SearchProcessor private constructor(query: SearchQuery, private val result
           if (highlightEnd > offsetRange.last) {
             break
           }
-          else if (boundaries.isOffsetInside(editor, index)) {
+          else if (boundaries.isOffsetInside(editor, index) && !editor.foldingModel.isOffsetCollapsed(index)) {
             offsets.add(index)
           }
           
