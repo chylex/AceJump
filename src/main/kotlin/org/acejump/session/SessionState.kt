@@ -2,6 +2,7 @@ package org.acejump.session
 
 import com.intellij.openapi.editor.Editor
 import org.acejump.boundaries.Boundaries
+import org.acejump.config.AceConfig
 import org.acejump.search.SearchProcessor
 import org.acejump.search.SearchQuery
 import org.acejump.search.Tagger
@@ -69,7 +70,7 @@ sealed interface SessionState {
         }
       }
       
-      return when (val result = tagger.type(char)) {
+      return when (val result = tagger.type(AceConfig.layout.characterRemapping.getOrDefault(char, char))) {
         is TaggingResult.Nothing -> TypeResult.Nothing
         is TaggingResult.Accept  -> TypeResult.AcceptTag(result.tag)
         is TaggingResult.Mark    -> {
