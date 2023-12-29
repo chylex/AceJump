@@ -128,7 +128,7 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
       canvas.setMarkers(emptyList())
     }
     
-    val processor = SearchProcessor.fromRegex(jumpEditors, pattern.regex, defaultBoundary)
+    val processor = SearchProcessor(jumpEditors, SearchQuery.RegularExpression(pattern.regex), defaultBoundary)
     textHighlighter.renderOccurrences(processor.resultsCopy, processor.query)
     
     state = SessionState.SelectTag(actions, jumpEditors, processor)

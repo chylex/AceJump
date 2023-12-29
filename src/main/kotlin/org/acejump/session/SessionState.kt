@@ -3,6 +3,7 @@ package org.acejump.session
 import com.intellij.openapi.editor.Editor
 import org.acejump.boundaries.Boundaries
 import org.acejump.search.SearchProcessor
+import org.acejump.search.SearchQuery
 import org.acejump.search.Tagger
 import org.acejump.search.TaggingResult
 
@@ -15,7 +16,7 @@ sealed interface SessionState {
     private val defaultBoundary: Boundaries,
   ) : SessionState {
     override fun type(char: Char): TypeResult {
-      val searchProcessor = SearchProcessor.fromString(jumpEditors, char.toString(), defaultBoundary)
+      val searchProcessor = SearchProcessor(jumpEditors, SearchQuery.Literal(char.toString(), excludeMiddlesOfWords = true), defaultBoundary)
       
       return if (searchProcessor.isQueryFinished) {
         TypeResult.ChangeState(SelectTag(actions, jumpEditors, searchProcessor))
@@ -49,8 +50,8 @@ sealed interface SessionState {
   
   class SelectTag internal constructor(
     private val actions: SessionActions,
-    jumpEditors: List<Editor>,
-    searchProcessor: SearchProcessor,
+    private val jumpEditors: List<Editor>,
+    private val searchProcessor: SearchProcessor,
   ) : SessionState {
     private val tagger = Tagger(jumpEditors, searchProcessor.resultsCopy)
     
@@ -59,6 +60,15 @@ sealed interface SessionState {
     }
     
     override fun type(char: Char): TypeResult {
+      if (char == ' ') {
+        val query = searchProcessor.query
+        if (query is SearchQuery.Literal && query.excludeMiddlesOfWords) {
+          val newQuery = SearchQuery.Literal(query.rawText, excludeMiddlesOfWords = false)
+          val newSearchProcessor = SearchProcessor(jumpEditors, newQuery, searchProcessor.boundaries)
+          return TypeResult.ChangeState(SelectTag(actions, jumpEditors, newSearchProcessor))
+        }
+      }
+      
       return when (val result = tagger.type(char)) {
         is TaggingResult.Nothing -> TypeResult.Nothing
         is TaggingResult.Accept  -> TypeResult.AcceptTag(result.tag)

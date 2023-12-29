@@ -11,18 +11,8 @@ import org.acejump.matchesAt
 /**
  * Searches editor text for matches of a [SearchQuery], and updates previous results when the user [refineQuery]s a character.
  */
-class SearchProcessor private constructor(query: SearchQuery, private val results: MutableMap<Editor, IntArrayList>) {
-  companion object {
-    fun fromString(editors: List<Editor>, query: String, boundaries: Boundaries): SearchProcessor {
-      return SearchProcessor(editors, SearchQuery.Literal(query), boundaries)
-    }
-    
-    fun fromRegex(editors: List<Editor>, pattern: String, boundaries: Boundaries): SearchProcessor {
-      return SearchProcessor(editors, SearchQuery.RegularExpression(pattern), boundaries)
-    }
-  }
-  
-  private constructor(editors: List<Editor>, query: SearchQuery, boundaries: Boundaries) : this(query, mutableMapOf()) {
+class SearchProcessor private constructor(query: SearchQuery, val boundaries: Boundaries, private val results: MutableMap<Editor, IntArrayList>) {
+  internal constructor(editors: List<Editor>, query: SearchQuery, boundaries: Boundaries) : this(query, boundaries, mutableMapOf()) {
     val regex = query.toRegex()
     
     if (regex != null) {
@@ -65,7 +55,7 @@ class SearchProcessor private constructor(query: SearchQuery, private val result
       return true
     }
     else {
-      query = SearchQuery.Literal(query.rawText + char)
+      query = query.refine(char)
       removeObsoleteResults()
       return isQueryFinished
     }
