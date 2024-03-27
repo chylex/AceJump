@@ -10,13 +10,13 @@ import com.maddyhome.idea.vim.action.change.change.ChangeVisualAction
 import com.maddyhome.idea.vim.action.change.delete.DeleteVisualAction
 import com.maddyhome.idea.vim.action.copy.YankVisualAction
 import com.maddyhome.idea.vim.api.injector
-import com.maddyhome.idea.vim.command.MappingMode.OP_PENDING
 import com.maddyhome.idea.vim.command.OperatorArguments
 import com.maddyhome.idea.vim.group.visual.vimSetSelection
 import com.maddyhome.idea.vim.helper.inVisualMode
 import com.maddyhome.idea.vim.helper.vimSelectionStart
 import com.maddyhome.idea.vim.helper.vimStateMachine
 import com.maddyhome.idea.vim.newapi.vim
+import com.maddyhome.idea.vim.state.mode.Mode
 import com.maddyhome.idea.vim.state.mode.SelectionType
 import org.acejump.boundaries.StandardBoundaries.AFTER_CARET
 import org.acejump.boundaries.StandardBoundaries.BEFORE_CARET
@@ -52,12 +52,12 @@ sealed class AceVimAction : DumbAwareAction() {
           }
           else {
             val vim = editor.vim
+            val keyHandler = KeyHandler.getInstance()
             val commandState = vim.vimStateMachine
-            if (commandState.isOperatorPending) {
-              val key = commandState.commandBuilder.keys.singleOrNull()?.keyChar
+            if (commandState.isOperatorPending(vim.mode)) {
+              val key = keyHandler.keyHandlerState.commandBuilder.keys.singleOrNull()?.keyChar
               
-              commandState.reset()
-              KeyHandler.getInstance().fullReset(vim)
+              keyHandler.fullReset(vim)
               
               AceVimUtil.enterVisualMode(vim, SelectionType.CHARACTER_WISE)
               caret.vim.vimSetSelection(caret.offset, initialOffset, moveCaretToSelectionEnd = true)
@@ -72,10 +72,10 @@ sealed class AceVimAction : DumbAwareAction() {
               if (action != null) {
                 ApplicationManager.getApplication().invokeLater {
                   WriteAction.run<Nothing> {
-                    commandState.commandBuilder.pushCommandPart(action)
+                    keyHandler.keyHandlerState.commandBuilder.pushCommandPart(action)
                     
-                    val cmd = commandState.commandBuilder.buildCommand()
-                    val operatorArguments = OperatorArguments(commandState.mappingState.mappingMode == OP_PENDING, cmd.rawCount, commandState.mode)
+                    val cmd = keyHandler.keyHandlerState.commandBuilder.buildCommand()
+                    val operatorArguments = OperatorArguments(vim.mode is Mode.OP_PENDING, cmd.rawCount, commandState.mode)
                     
                     commandState.executingCommand = cmd
                     injector.actionExecutor.executeVimAction(vim, action, context, operatorArguments)

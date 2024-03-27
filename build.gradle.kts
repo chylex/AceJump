@@ -15,9 +15,9 @@ repositories {
 }
 
 intellij {
-  version.set("2023.3")
+  version.set("2023.3.3")
   updateSinceUntilBuild.set(false)
-  plugins.add("IdeaVIM:chylex-22")
+  plugins.add("IdeaVIM:chylex-31")
   
   pluginsRepositories {
     custom("https://intellij.chylex.com")
