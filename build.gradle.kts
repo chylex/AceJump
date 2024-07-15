@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
   kotlin("jvm") version "1.9.10"
-  id("org.jetbrains.intellij") version "1.16.1"
+  id("org.jetbrains.intellij") version "1.17.3"
 }
 
 group = "org.acejump"
@@ -15,9 +15,9 @@ repositories {
 }
 
 intellij {
-  version.set("2023.3.3")
+  version.set("2024.1.4")
   updateSinceUntilBuild.set(false)
-  plugins.add("IdeaVIM:chylex-31")
+  plugins.add("IdeaVIM:chylex-37")
   
   pluginsRepositories {
     custom("https://intellij.chylex.com")
@@ -33,7 +33,7 @@ dependencies {
 }
 
 tasks.patchPluginXml {
-  sinceBuild.set("233")
+  sinceBuild.set("241")
 }
 
 tasks.buildSearchableOptions {
