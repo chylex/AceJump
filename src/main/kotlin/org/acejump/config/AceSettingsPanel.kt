@@ -5,16 +5,15 @@ import com.intellij.ui.ColorPanel
 import com.intellij.ui.components.JBSlider
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
-import com.intellij.ui.layout.Cell
-import com.intellij.ui.layout.GrowPolicy.MEDIUM_TEXT
-import com.intellij.ui.layout.GrowPolicy.SHORT_TEXT
-import com.intellij.ui.layout.panel
+import com.intellij.ui.dsl.builder.COLUMNS_LARGE
+import com.intellij.ui.dsl.builder.COLUMNS_SHORT
+import com.intellij.ui.dsl.builder.columns
+import com.intellij.ui.dsl.builder.panel
 import org.acejump.input.KeyLayout
 import java.awt.Color
 import java.awt.Font
 import java.util.Hashtable
 import javax.swing.JCheckBox
-import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JSlider
@@ -52,39 +51,30 @@ internal class AceSettingsPanel {
   }
   
   internal val rootPanel: JPanel = panel {
-    fun Cell.short(component: JComponent) = component(growPolicy = SHORT_TEXT)
-    fun Cell.medium(component: JComponent) = component(growPolicy = MEDIUM_TEXT)
-    
-    titledRow("Characters and Layout") {
-      row("Allowed characters in tags:") { medium(tagAllowedCharsField) }
-      row("Allowed prefix characters in tags:") { medium(tagPrefixCharsField) }
-      row("Keyboard layout:") { short(keyboardLayoutCombo) }
-      row("Keyboard design:") { short(keyboardLayoutArea) }
+    group("Characters and Layout") {
+      row("Allowed characters in tags:") { cell(tagAllowedCharsField).columns(COLUMNS_LARGE) }
+      row("Allowed prefix characters in tags:") { cell(tagPrefixCharsField).columns(COLUMNS_MEDIUM) }
+      row("Keyboard layout:") { cell(keyboardLayoutCombo).columns(COLUMNS_SHORT) }
+      row("Keyboard design:") { cell(keyboardLayoutArea).columns(COLUMNS_SHORT) }
     }
     
-    titledRow("Behavior") {
-      row("Minimum typed characters (1-10):") { short(minQueryLengthField) }
+    group("Behavior") {
+      row("Minimum typed characters (1-10):") { cell(minQueryLengthField).columns(COLUMNS_SHORT) }
     }
     
-    titledRow("Colors") {
+    group("Colors") {
       row("Caret background:") {
-        cell {
-          component(jumpModeColorWheel)
-        }
+        cell(jumpModeColorWheel)
       }
       row("Tag foreground:") {
-        cell {
-          component(tagForeground1ColorWheel)
-          component(tagForeground2ColorWheel)
-        }
+        cell(tagForeground1ColorWheel)
+        cell(tagForeground2ColorWheel)
       }
       row("Search highlight:") {
-        cell {
-          component(searchHighlightColorWheel)
-        }
+        cell(searchHighlightColorWheel)
       }
       row("Editor fade opacity (%):") {
-        medium(editorFadeOpacitySlider)
+        cell(editorFadeOpacitySlider)
       }
     }
   }
@@ -123,7 +113,7 @@ internal class AceSettingsPanel {
   
   // Removal pending support for https://youtrack.jetbrains.com/issue/KT-8575
   
-  private operator fun JTextComponent.getValue(a: AceSettingsPanel, p: KProperty<*>) = text.toLowerCase()
+  private operator fun JTextComponent.getValue(a: AceSettingsPanel, p: KProperty<*>) = text.lowercase()
   private operator fun JTextComponent.setValue(a: AceSettingsPanel, p: KProperty<*>, s: String) = setText(s)
   
   private operator fun ColorPanel.getValue(a: AceSettingsPanel, p: KProperty<*>) = selectedColor

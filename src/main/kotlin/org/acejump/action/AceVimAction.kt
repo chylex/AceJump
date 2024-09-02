@@ -1,5 +1,6 @@
 package org.acejump.action
 
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.CommonDataKeys
 import com.intellij.openapi.application.ApplicationManager
@@ -165,6 +166,10 @@ sealed class AceVimAction : DumbAwareAction() {
   class JumpAllEditorsGoToDeclaration : DumbAwareAction() {
     override fun update(action: AnActionEvent) {
       action.presentation.isEnabled = action.getData(CommonDataKeys.EDITOR) != null
+    }
+    
+    override fun getActionUpdateThread(): ActionUpdateThread {
+      return ActionUpdateThread.BGT
     }
     
     override fun actionPerformed(e: AnActionEvent) {

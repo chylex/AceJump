@@ -15,12 +15,15 @@ repositories {
 }
 
 intellij {
-  version.set("2024.1.4")
+  version.set("2024.2")
   updateSinceUntilBuild.set(false)
-  plugins.add("IdeaVIM:chylex-37")
+  
+  plugins.add("IdeaVIM:chylex-40")
+  plugins.add("com.intellij.classic.ui:242.20224.159")
   
   pluginsRepositories {
     custom("https://intellij.chylex.com")
+    marketplace()
   }
 }
 
@@ -33,7 +36,7 @@ dependencies {
 }
 
 tasks.patchPluginXml {
-  sinceBuild.set("241")
+  sinceBuild.set("242")
 }
 
 tasks.buildSearchableOptions {
