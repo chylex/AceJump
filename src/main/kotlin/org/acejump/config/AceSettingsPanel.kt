@@ -26,7 +26,6 @@ import kotlin.reflect.KProperty
 @Suppress("UsePropertyAccessSyntax")
 internal class AceSettingsPanel {
   private val tagAllowedCharsField = JBTextField()
-  private val tagPrefixCharsField = JBTextField()
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
@@ -45,7 +44,6 @@ internal class AceSettingsPanel {
   
   init {
     tagAllowedCharsField.apply { font = Font("monospaced", font.style, font.size) }
-    tagPrefixCharsField.apply { font = Font("monospaced", font.style, font.size) }
     keyboardLayoutArea.apply { font = Font("monospaced", font.style, font.size) }
     keyboardLayoutCombo.setupEnumItems { keyChars = it.rows.joinToString("\n") }
   }
@@ -53,7 +51,6 @@ internal class AceSettingsPanel {
   internal val rootPanel: JPanel = panel {
     group("Characters and Layout") {
       row("Allowed characters in tags:") { cell(tagAllowedCharsField).columns(COLUMNS_LARGE) }
-      row("Allowed prefix characters in tags:") { cell(tagPrefixCharsField).columns(COLUMNS_MEDIUM) }
       row("Keyboard layout:") { cell(keyboardLayoutCombo).columns(COLUMNS_SHORT) }
       row("Keyboard design:") { cell(keyboardLayoutArea).columns(COLUMNS_SHORT) }
     }
@@ -81,7 +78,6 @@ internal class AceSettingsPanel {
   
   // Property-to-property delegation: https://stackoverflow.com/q/45074596/1772342
   internal var allowedChars by tagAllowedCharsField
-  internal var prefixChars by tagPrefixCharsField
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
@@ -101,7 +97,6 @@ internal class AceSettingsPanel {
   
   fun reset(settings: AceSettings) {
     allowedChars = settings.allowedChars
-    prefixChars = settings.prefixChars
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
     editorFadeOpacityPercent = settings.editorFadeOpacity
