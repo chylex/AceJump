@@ -2,6 +2,7 @@ package org.acejump.session
 
 import com.intellij.openapi.editor.Editor
 import org.acejump.boundaries.Boundaries
+import org.acejump.boundaries.StandardBoundaries
 import org.acejump.config.AceConfig
 import org.acejump.search.SearchProcessor
 import org.acejump.search.SearchQuery
@@ -17,7 +18,7 @@ sealed interface SessionState {
     private val defaultBoundary: Boundaries,
   ) : SessionState {
     override fun type(char: Char): TypeResult {
-      val searchProcessor = SearchProcessor(jumpEditors, SearchQuery.Literal(char.toString(), excludeMiddlesOfWords = true), defaultBoundary)
+      val searchProcessor = SearchProcessor(jumpEditors, SearchQuery.Literal(char.toString()), defaultBoundary)
       
       return if (searchProcessor.isQueryFinished) {
         TypeResult.ChangeState(SelectTag(actions, jumpEditors, searchProcessor))
@@ -63,9 +64,15 @@ sealed interface SessionState {
     override fun type(char: Char): TypeResult {
       if (char == ' ') {
         val query = searchProcessor.query
-        if (query is SearchQuery.Literal && query.excludeMiddlesOfWords) {
-          val newQuery = SearchQuery.Literal(query.rawText, excludeMiddlesOfWords = false)
-          val newSearchProcessor = SearchProcessor(jumpEditors, newQuery, searchProcessor.boundaries)
+        if (query is SearchQuery.Literal) {
+          val newBoundaries = when (searchProcessor.boundaries) {
+            StandardBoundaries.VISIBLE_ON_SCREEN -> StandardBoundaries.AFTER_CARET
+            StandardBoundaries.AFTER_CARET       -> StandardBoundaries.BEFORE_CARET
+            StandardBoundaries.BEFORE_CARET      -> StandardBoundaries.VISIBLE_ON_SCREEN
+            else                                 -> searchProcessor.boundaries
+          }
+          
+          val newSearchProcessor = SearchProcessor(jumpEditors, query, newBoundaries)
           return TypeResult.ChangeState(SelectTag(actions, jumpEditors, newSearchProcessor))
         }
       }

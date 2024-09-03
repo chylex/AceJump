@@ -28,13 +28,13 @@ internal sealed class SearchQuery {
    * If the first character of the query is lowercase, then the entire query will be case-insensitive,
    * and only beginnings of words and camel humps will be matched.
    */
-  class Literal(override val rawText: String, val excludeMiddlesOfWords: Boolean) : SearchQuery() {
+  class Literal(override val rawText: String) : SearchQuery() {
     init {
       require(rawText.isNotEmpty())
     }
     
     override fun refine(char: Char): SearchQuery {
-      return Literal(rawText + char, excludeMiddlesOfWords)
+      return Literal(rawText + char)
     }
     
     override fun getHighlightLength(text: CharSequence, offset: Int): Int {
@@ -44,19 +44,14 @@ internal sealed class SearchQuery {
     override fun toRegex(): Regex {
       val firstChar = rawText.first()
       val pattern = if (firstChar.isLowerCase()) {
-        if (excludeMiddlesOfWords) {
-          val firstCharUppercasePattern = Regex.escape(firstChar.uppercaseChar().toString())
-          val firstCharPattern = Regex.escape(firstChar.toString())
-          val remainingPattern = if (rawText.length > 1) Regex.escape(rawText.drop(1)) else ""
-          "(?:$firstCharUppercasePattern|(?<![a-zA-Z])$firstCharPattern)$remainingPattern"
-        }
-        else {
-          val fullPattern = Regex.escape(rawText)
-          "(?i)$fullPattern"
-        }
+        val fullPattern = Regex.escape(rawText)
+        "(?i)$fullPattern"
       }
       else {
-        Regex.escape(rawText)
+        val firstCharUppercasePattern = Regex.escape(firstChar.toString())
+        val firstCharLowercasePattern = Regex.escape(firstChar.lowercase())
+        val remainingPattern = if (rawText.length > 1) Regex.escape(rawText.drop(1)) else ""
+        "(?:$firstCharUppercasePattern|(?<![a-zA-Z])$firstCharLowercasePattern)$remainingPattern"
       }
       
       return Regex(pattern, setOf(RegexOption.MULTILINE))
@@ -70,7 +65,7 @@ internal sealed class SearchQuery {
     override val rawText = ""
     
     override fun refine(char: Char): SearchQuery {
-      return Literal(char.toString(), excludeMiddlesOfWords = false)
+      return Literal(char.toString())
     }
     
     override fun getHighlightLength(text: CharSequence, offset: Int): Int {
