@@ -30,7 +30,7 @@ enum class KeyLayout(internal val rows: Array<String>, priority: String, interna
   internal val allChars = rows.joinToString("").toCharArray().apply(CharArray::sort).joinToString("")
   internal val allPriorities = priority.mapIndexed { index, char -> char to index }.toMap()
   
-  internal inline fun priority(crossinline tagToChar: (String) -> Char): (String) -> Int {
-    return { allPriorities.getOrDefault(tagToChar(it), Int.MAX_VALUE) }
+  internal fun priority(): (Char) -> Int {
+    return { allPriorities.getOrDefault(it, Int.MAX_VALUE) }
   }
 }

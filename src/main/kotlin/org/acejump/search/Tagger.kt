@@ -40,7 +40,7 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
       .flatMap { (editor, sites) -> sites.map { site -> Tag(editor, site) } }
       .sortedWith(siteOrder(editors, caches))
     
-    tagMap = KeyLayoutCache.allPossibleTagsLowercase.zip(tagSites).toMap()
+    tagMap = generateTags(tagSites).zip(tagSites).toMap()
   }
   
   internal fun type(char: Char): TaggingResult {
@@ -61,6 +61,35 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
   }
   
   private companion object {
+    private fun generateTags(tagSites: List<Tag>): List<String> {
+      val allowedChars = KeyLayoutCache.allowedCharsSorted
+      
+      val tags = mutableListOf<String>()
+      var remainingTagCount = tagSites.size
+      
+      outer@ for (i in allowedChars.indices) {
+        val c1 = allowedChars[i]
+        
+        if (remainingTagCount <= allowedChars.size - i) {
+          tags.add(c1.toString())
+          if (--remainingTagCount <= 0) {
+            break@outer
+          }
+        }
+        else {
+          for (c2 in allowedChars) {
+            tags.add("$c1$c2")
+            
+            if (--remainingTagCount <= 0) {
+              break@outer
+            }
+          }
+        }
+      }
+      
+      return tags
+    }
+    
     private fun sortResults(results: Map<Editor, IntList>, caches: Map<Editor, EditorOffsetCache>) {
       for ((editor, offsets) in results) {
         val cache = caches.getValue(editor)

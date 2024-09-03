@@ -8,7 +8,6 @@ import java.awt.Color
 data class AceSettings(
   var layout: KeyLayout = QWERTY,
   var allowedChars: String = layout.allChars,
-  var prefixChars: String = ";",
   var minQueryLength: Int = 1,
   var editorFadeOpacity: Int = 70,
   

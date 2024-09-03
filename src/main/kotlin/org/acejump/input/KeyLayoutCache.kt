@@ -7,17 +7,14 @@ import org.acejump.config.AceSettings
  * with repeated keys (ex. FF, JJ) or adjacent keys (ex. GH, UJ).
  */
 internal object KeyLayoutCache {
-  /**
-   * Returns all possible two key tags, pre-sorted according to [tagOrder].
-   */
-  lateinit var allPossibleTagsLowercase: List<String>
+  lateinit var allowedCharsSorted: List<Char>
     private set
   
   /**
    * Called before any lazily initialized properties are used, to ensure that they are initialized even if the settings are missing.
    */
   fun ensureInitialized(settings: AceSettings) {
-    if (!::allPossibleTagsLowercase.isInitialized) {
+    if (!::allowedCharsSorted.isInitialized) {
       reset(settings)
     }
   }
@@ -26,22 +23,17 @@ internal object KeyLayoutCache {
    * Re-initializes cached data according to updated settings.
    */
   fun reset(settings: AceSettings) {
-    @Suppress("ConvertLambdaToReference")
-    val allSuffixChars = processCharList(settings.allowedChars).ifEmpty { processCharList(settings.layout.allChars).toList() }
-    val allPrefixChars = processCharList(settings.prefixChars).filterNot(allSuffixChars::contains).plus("")
+    val allowedCharList = processCharList(settings.allowedChars)
     
-    val tagOrder = compareBy(
-      String::length,
-      { if (it.length == 1) Int.MIN_VALUE else allPrefixChars.indexOf(it.first().toString()) },
-      settings.layout.priority(String::last)
-    )
-    
-    allPossibleTagsLowercase = allSuffixChars
-      .flatMap { suffix -> allPrefixChars.map { prefix -> "$prefix$suffix" } }
-      .sortedWith(tagOrder)
+    allowedCharsSorted = if (allowedCharList.isEmpty()) {
+      processCharList(settings.layout.allChars)
+    }
+    else {
+      allowedCharList.sortedWith(compareBy(settings.layout.priority()))
+    }
   }
   
-  private fun processCharList(charList: String): Set<String> {
-    return charList.toCharArray().map(Char::lowercase).toSet()
+  private fun processCharList(charList: String): List<Char> {
+    return charList.toCharArray().map(Char::lowercaseChar).distinct()
   }
 }
