@@ -11,6 +11,7 @@ import com.intellij.ui.dsl.builder.columns
 import com.intellij.ui.dsl.builder.panel
 import org.acejump.input.KeyLayout
 import java.awt.Color
+import java.awt.Dimension
 import java.awt.Font
 import java.util.Hashtable
 import javax.swing.JCheckBox
@@ -36,6 +37,7 @@ internal class AceSettingsPanel {
     paintTicks = true
     minorTickSpacing = 1
     majorTickSpacing = 1
+    minimumSize = Dimension(275, minimumSize.height)
   }
   private val jumpModeColorWheel = ColorPanel()
   private val tagForeground1ColorWheel = ColorPanel()
