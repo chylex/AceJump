@@ -19,6 +19,11 @@ sealed class EditorOffsetCache {
   abstract fun visibleArea(editor: Editor): Pair<Point, Point>
   
   /**
+   * Returns whether the offset is in the visible area rectangle.
+   */
+  abstract fun isVisible(editor: Editor, offset: Int): Boolean
+  
+  /**
    * Returns the editor offset at the provided pixel coordinate.
    */
   abstract fun xyToOffset(editor: Editor, pos: Point): Int
@@ -36,11 +41,30 @@ sealed class EditorOffsetCache {
   
   private class Cache : EditorOffsetCache() {
     private var visibleArea: Pair<Point, Point>? = null
+    private val lineToVisibleOffsetRange = Int2ObjectOpenHashMap<IntRange>()
     private val pointToOffset = Object2IntOpenHashMap<Point>().apply { defaultReturnValue(-1) }
     private val offsetToPoint = Int2ObjectOpenHashMap<Point>()
     
     override fun visibleArea(editor: Editor): Pair<Point, Point> {
       return visibleArea ?: Uncached.visibleArea(editor).also { visibleArea = it }
+    }
+    
+    override fun isVisible(editor: Editor, offset: Int): Boolean {
+      val visualLine = editor.offsetToVisualLine(offset, false)
+      
+      var visibleRange = lineToVisibleOffsetRange.get(visualLine)
+      if (visibleRange == null) {
+        val (topLeft, bottomRight) = visibleArea(editor)
+        val lineY = editor.visualLineToY(visualLine)
+        
+        val firstVisibleOffset = xyToOffset(editor, Point(topLeft.x, lineY))
+        val lastVisibleOffset = xyToOffset(editor, Point(bottomRight.x, lineY))
+        
+        visibleRange = firstVisibleOffset..lastVisibleOffset
+        lineToVisibleOffsetRange.put(visualLine, visibleRange)
+      }
+      
+      return offset in visibleRange
     }
     
     override fun xyToOffset(editor: Editor, pos: Point): Int {
@@ -51,7 +75,6 @@ sealed class EditorOffsetCache {
       }
       
       return Uncached.xyToOffset(editor, pos).also {
-        @Suppress("ReplacePutWithAssignment")
         pointToOffset.put(pos, it)
       }
     }
@@ -64,7 +87,6 @@ sealed class EditorOffsetCache {
       }
       
       return Uncached.offsetToXY(editor, offset).also {
-        @Suppress("ReplacePutWithAssignment")
         offsetToPoint.put(offset, it)
       }
     }
@@ -78,6 +100,15 @@ sealed class EditorOffsetCache {
         visibleRect.location,
         visibleRect.location.apply { translate(visibleRect.width, visibleRect.height) }
       )
+    }
+    
+    override fun isVisible(editor: Editor, offset: Int): Boolean {
+      val (topLeft, bottomRight) = visibleArea(editor)
+      val pos = offsetToXY(editor, offset)
+      val x = pos.x
+      val y = pos.y
+      
+      return x >= topLeft.x && y >= topLeft.y && x <= bottomRight.x && y <= bottomRight.y
     }
     
     override fun xyToOffset(editor: Editor, pos: Point): Int {

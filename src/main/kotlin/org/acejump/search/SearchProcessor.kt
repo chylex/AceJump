@@ -3,6 +3,7 @@ package org.acejump.search
 import com.intellij.openapi.editor.Editor
 import it.unimi.dsi.fastutil.ints.IntArrayList
 import org.acejump.boundaries.Boundaries
+import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.clone
 import org.acejump.config.AceConfig
 import org.acejump.immutableText
@@ -17,9 +18,10 @@ class SearchProcessor private constructor(query: SearchQuery, val boundaries: Bo
     
     if (regex != null) {
       for (editor in editors) {
+        val cache = EditorOffsetCache.new()
         val offsets = IntArrayList()
         
-        val offsetRange = boundaries.getOffsetRange(editor)
+        val offsetRange = boundaries.getOffsetRange(editor, cache)
         var result = regex.find(editor.immutableText, offsetRange.first)
         
         while (result != null) {
@@ -29,7 +31,7 @@ class SearchProcessor private constructor(query: SearchQuery, val boundaries: Bo
           if (highlightEnd > offsetRange.last) {
             break
           }
-          else if (boundaries.isOffsetInside(editor, index) && !editor.foldingModel.isOffsetCollapsed(index)) {
+          else if (boundaries.isOffsetInside(editor, index, cache) && !editor.foldingModel.isOffsetCollapsed(index)) {
             offsets.add(index)
           }
           
