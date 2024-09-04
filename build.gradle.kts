@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.acejump"
-version = "chylex-22"
+version = "chylex-23"
 
 repositories {
   mavenCentral()
