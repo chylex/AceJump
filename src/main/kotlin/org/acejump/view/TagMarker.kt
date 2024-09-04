@@ -12,10 +12,13 @@ import java.awt.Rectangle
  * Describes a 1 or 2 character shortcut that points to a specific character in the editor.
  */
 internal class TagMarker(
-  private val tag: CharArray,
+  private val firstChar: String,
+  private val secondChar: String,
   val offset: Int
 ) {
-  private val length = tag.size
+  private constructor(tag: String, offset: Int) : this(tag.first().toString(), tag.drop(1), offset)
+  
+  private val length = firstChar.length + secondChar.length
   
   companion object {
     /**
@@ -28,7 +31,7 @@ internal class TagMarker(
      * character ([typedTag]) matches the first [tag] character, only the second [tag] character is displayed.
      */
     fun create(tag: String, offset: Int, typedTag: String): TagMarker {
-      return TagMarker(tag.drop(typedTag.length).toCharArray(), offset)
+      return TagMarker(tag.drop(typedTag.length), offset)
     }
   }
   
@@ -65,11 +68,11 @@ internal class TagMarker(
     
     g.font = font.tagFont
     g.color = font.foregroundColor1
-    g.drawChars(tag, 0, 1, x, y)
+    g.drawString(firstChar, x, y)
     
-    if (tag.size > 1) {
+    if (secondChar.isNotEmpty()) {
       g.color = font.foregroundColor2
-      g.drawChars(tag, 1, length - 1, x + font.tagCharWidth, y)
+      g.drawString(secondChar, x + font.tagCharWidth, y)
     }
   }
   
