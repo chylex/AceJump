@@ -133,12 +133,11 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
         return@Comparator if (aIsVisible) -1 else 1
       }
       
-      val aPosition = aCaches.offsetToXY(aEditor, a.offset)
-      val bPosition = bCaches.offsetToXY(bEditor, b.offset)
+      val firstEditor = editorPriority[0]
+      val caretPosition = caches.getValue(firstEditor).offsetToXY(firstEditor, firstEditor.caretModel.offset)
       
-      val caretPosition = editorPriority[0].offsetToXY(editorPriority[0].caretModel.offset)
-      val aDistance = aPosition.distanceSq(caretPosition)
-      val bDistance = bPosition.distanceSq(caretPosition)
+      val aDistance = aCaches.offsetToXY(aEditor, a.offset).distanceSq(caretPosition)
+      val bDistance = bCaches.offsetToXY(bEditor, b.offset).distanceSq(caretPosition)
       
       return@Comparator aDistance.compareTo(bDistance)
     }
