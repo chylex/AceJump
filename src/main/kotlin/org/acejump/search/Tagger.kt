@@ -3,6 +3,7 @@ package org.acejump.search
 import com.google.common.collect.ArrayListMultimap
 import com.intellij.openapi.editor.Editor
 import it.unimi.dsi.fastutil.ints.IntList
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import org.acejump.boundaries.EditorOffsetCache
 import org.acejump.boundaries.StandardBoundaries.VISIBLE_ON_SCREEN
 import org.acejump.input.KeyLayoutCache
@@ -40,7 +41,7 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
       .flatMap { (editor, sites) -> sites.map { site -> Tag(editor, site) } }
       .sortedWith(siteOrder(editors, caches))
     
-    tagMap = generateTags(tagSites).zip(tagSites).toMap()
+    tagMap = generateTags(tagSites.size).zip(tagSites).toMap()
   }
   
   internal fun type(char: Char): TaggingResult {
@@ -61,13 +62,15 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
   }
   
   private companion object {
-    private fun generateTags(tagSites: List<Tag>): List<String> {
+    private fun generateTags(tagCount: Int): List<String> {
+      val allowedTagsSorted = KeyLayoutCache.allowedTagsSorted
       val tags = mutableListOf<String>()
       
       val containedSingleCharTags = mutableSetOf<Char>()
       val blockedSingleCharTags = mutableSetOf<Char>()
+      val doubleCharTagCountsByFirstChar = Object2IntOpenHashMap<Char>()
       
-      for (tag in KeyLayoutCache.allowedTagsSorted) {
+      for (tag in allowedTagsSorted) {
         val firstChar = tag.first()
         
         if (tag.length == 1) {
@@ -83,13 +86,39 @@ class Tagger(private val editors: List<Editor>, results: Map<Editor, IntList>) {
           }
           
           blockedSingleCharTags.add(firstChar)
+          doubleCharTagCountsByFirstChar.addTo(firstChar, 1)
         }
         
         tags.add(tag)
         
-        if (tags.size >= tagSites.size) {
-          return tags
+        if (tags.size >= tagCount) {
+          break
         }
+      }
+      
+      // In rare cases, the final tag list may contain a double character tag that is the only tag starting with its first character,
+      // so we replace it with the single character tag.
+      for (entry in doubleCharTagCountsByFirstChar.object2IntEntrySet()) {
+        if (entry.intValue != 1) {
+          continue
+        }
+        
+        tags.removeAt(tags.indexOfFirst { it.first() == entry.key })
+        
+        val tag = entry.key.toString()
+        var previousTagIndex = -1
+        
+        // The implementation of searching where to place the single character tag is theoretically slow,
+        // but getting here is so rare it doesn't matter.
+        for (i in allowedTagsSorted.indexOf(tag) - 1 downTo 0) {
+          previousTagIndex = tags.indexOf(allowedTagsSorted[i])
+          
+          if (previousTagIndex != -1) {
+            break
+          }
+        }
+        
+        tags.add(previousTagIndex + 1, tag)
       }
       
       return tags
