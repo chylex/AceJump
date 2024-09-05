@@ -16,7 +16,7 @@ import com.maddyhome.idea.vim.group.visual.vimSetSelection
 import com.maddyhome.idea.vim.helper.inVisualMode
 import com.maddyhome.idea.vim.helper.vimSelectionStart
 import com.maddyhome.idea.vim.newapi.vim
-import com.maddyhome.idea.vim.state.mode.Mode
+import com.maddyhome.idea.vim.state.mode.Mode.OP_PENDING
 import com.maddyhome.idea.vim.state.mode.SelectionType
 import org.acejump.boundaries.StandardBoundaries.AFTER_CARET
 import org.acejump.boundaries.StandardBoundaries.BEFORE_CARET
@@ -52,8 +52,8 @@ sealed class AceVimAction : DumbAwareAction() {
           }
           else {
             val vim = editor.vim
-            val keyHandler = KeyHandler.getInstance()
-            if (keyHandler.isOperatorPending(vim.mode, keyHandler.keyHandlerState)) {
+            if (vim.mode is OP_PENDING) {
+              val keyHandler = KeyHandler.getInstance()
               val key = keyHandler.keyHandlerState.commandBuilder.keys.singleOrNull()?.keyChar
               
               keyHandler.fullReset(vim)
@@ -71,10 +71,10 @@ sealed class AceVimAction : DumbAwareAction() {
               if (action != null) {
                 ApplicationManager.getApplication().invokeLater {
                   WriteAction.run<Nothing> {
-                    keyHandler.keyHandlerState.commandBuilder.pushCommandPart(action)
+                    keyHandler.keyHandlerState.commandBuilder.addAction(action)
                     
                     val cmd = keyHandler.keyHandlerState.commandBuilder.buildCommand()
-                    val operatorArguments = OperatorArguments(vim.mode is Mode.OP_PENDING, cmd.rawCount, injector.vimState.mode)
+                    val operatorArguments = OperatorArguments(vim.mode is OP_PENDING, cmd.rawCount, injector.vimState.mode)
                     
                     injector.vimState.executingCommand = cmd
                     injector.actionExecutor.executeVimAction(vim, action, context, operatorArguments)

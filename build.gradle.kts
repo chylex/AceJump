@@ -18,7 +18,7 @@ intellij {
   version.set("2024.2")
   updateSinceUntilBuild.set(false)
   
-  plugins.add("IdeaVIM:chylex-40")
+  plugins.add("IdeaVIM:chylex-41")
   plugins.add("com.intellij.classic.ui:242.20224.159")
   
   pluginsRepositories {
