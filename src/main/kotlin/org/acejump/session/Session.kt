@@ -113,7 +113,7 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
     }
     
     setMode(mode())
-    state = SessionState.WaitForKey(actions, jumpEditors, defaultBoundary)
+    state = SessionState.WaitForKey(actions, jumpEditors, defaultBoundary, AceConfig.invertUppercaseMode)
   }
   
   /**
@@ -128,7 +128,7 @@ class Session(private val mainEditor: Editor, private val jumpEditors: List<Edit
       canvas.setMarkers(emptyList())
     }
     
-    val processor = SearchProcessor(jumpEditors, SearchQuery.RegularExpression(pattern.regex), defaultBoundary)
+    val processor = SearchProcessor(jumpEditors, SearchQuery.RegularExpression(pattern.regex), defaultBoundary, AceConfig.invertUppercaseMode)
     textHighlighter.renderOccurrences(processor.resultsCopy, processor.query)
     
     state = SessionState.SelectTag(actions, jumpEditors, processor)

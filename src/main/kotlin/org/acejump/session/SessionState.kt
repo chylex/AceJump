@@ -16,9 +16,10 @@ sealed interface SessionState {
     private val actions: SessionActions,
     private val jumpEditors: List<Editor>,
     private val defaultBoundary: Boundaries,
+    private val invertUppercaseMode: Boolean,
   ) : SessionState {
     override fun type(char: Char): TypeResult {
-      val searchProcessor = SearchProcessor(jumpEditors, SearchQuery.Literal(char.toString()), defaultBoundary)
+      val searchProcessor = SearchProcessor(jumpEditors, SearchQuery.Literal(char.toString()), defaultBoundary, invertUppercaseMode)
       
       return if (searchProcessor.isQueryFinished) {
         TypeResult.ChangeState(SelectTag(actions, jumpEditors, searchProcessor))
@@ -72,9 +73,13 @@ sealed interface SessionState {
             else                                 -> searchProcessor.boundaries
           }
           
-          val newSearchProcessor = SearchProcessor(jumpEditors, query, newBoundaries)
+          val newSearchProcessor = SearchProcessor(jumpEditors, query, newBoundaries, searchProcessor.invertUppercaseMode)
           return TypeResult.ChangeState(SelectTag(actions, jumpEditors, newSearchProcessor))
         }
+      }
+      else if (char == '\n') {
+        val newSearchProcessor = SearchProcessor(jumpEditors, searchProcessor.query, searchProcessor.boundaries, !searchProcessor.invertUppercaseMode)
+        return TypeResult.ChangeState(SelectTag(actions, jumpEditors, newSearchProcessor))
       }
       
       return when (val result = tagger.type(AceConfig.layout.characterRemapping.getOrDefault(char, char))) {

@@ -12,9 +12,9 @@ import org.acejump.matchesAt
 /**
  * Searches editor text for matches of a [SearchQuery], and updates previous results when the user [refineQuery]s a character.
  */
-class SearchProcessor private constructor(query: SearchQuery, val boundaries: Boundaries, private val results: MutableMap<Editor, IntArrayList>) {
-  internal constructor(editors: List<Editor>, query: SearchQuery, boundaries: Boundaries) : this(query, boundaries, mutableMapOf()) {
-    val regex = query.toRegex()
+class SearchProcessor private constructor(query: SearchQuery, val boundaries: Boundaries, val invertUppercaseMode: Boolean, private val results: MutableMap<Editor, IntArrayList>) {
+  internal constructor(editors: List<Editor>, query: SearchQuery, boundaries: Boundaries, invertUppercaseMode: Boolean) : this(query, boundaries, invertUppercaseMode, mutableMapOf()) {
+    val regex = query.toRegex(invertUppercaseMode)
     
     if (regex != null) {
       for (editor in editors) {

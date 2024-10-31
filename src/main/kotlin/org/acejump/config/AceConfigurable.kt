@@ -15,6 +15,7 @@ class AceConfigurable : Configurable {
     panel.allowedChars != settings.allowedChars ||
       panel.keyboardLayout != settings.layout ||
       panel.minQueryLengthInt != settings.minQueryLength ||
+      panel.invertUppercaseMode != settings.invertUppercaseMode ||
       panel.editorFadeOpacityPercent != settings.editorFadeOpacity ||
       panel.jumpModeColor != settings.jumpModeColor ||
       panel.tagForegroundColor1 != settings.tagForegroundColor1 ||
@@ -25,6 +26,7 @@ class AceConfigurable : Configurable {
     settings.allowedChars = panel.allowedChars
     settings.layout = panel.keyboardLayout
     settings.minQueryLength = panel.minQueryLengthInt ?: settings.minQueryLength
+    settings.invertUppercaseMode = panel.invertUppercaseMode
     settings.editorFadeOpacity = panel.editorFadeOpacityPercent
     panel.jumpModeColor?.let { settings.jumpModeColor = it }
     panel.tagForegroundColor1?.let { settings.tagForegroundColor1 = it }

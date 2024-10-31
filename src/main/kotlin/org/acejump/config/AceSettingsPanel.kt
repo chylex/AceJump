@@ -2,6 +2,7 @@ package org.acejump.config
 
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.ColorPanel
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBSlider
 import com.intellij.ui.components.JBTextArea
 import com.intellij.ui.components.JBTextField
@@ -30,6 +31,7 @@ internal class AceSettingsPanel {
   private val keyboardLayoutCombo = ComboBox<KeyLayout>()
   private val keyboardLayoutArea = JBTextArea().apply { isEditable = false }
   private val minQueryLengthField = JBTextField()
+  private val invertUppercaseModeCheckBox = JBCheckBox("Invert uppercase mode")
   private val editorFadeOpacitySlider = JBSlider(0, 10).apply {
     labelTable = Hashtable((0..10).associateWith { JLabel("${it * 10}") })
     paintTrack = true
@@ -59,6 +61,7 @@ internal class AceSettingsPanel {
     
     group("Behavior") {
       row("Minimum typed characters (1-10):") { cell(minQueryLengthField).columns(COLUMNS_SHORT) }
+      row { cell(invertUppercaseModeCheckBox) }
     }
     
     group("Colors") {
@@ -83,6 +86,7 @@ internal class AceSettingsPanel {
   internal var keyboardLayout by keyboardLayoutCombo
   internal var keyChars by keyboardLayoutArea
   internal var minQueryLength by minQueryLengthField
+  internal var invertUppercaseMode by invertUppercaseModeCheckBox
   internal var editorFadeOpacity by editorFadeOpacitySlider
   internal var jumpModeColor by jumpModeColorWheel
   internal var tagForegroundColor1 by tagForeground1ColorWheel
@@ -101,6 +105,7 @@ internal class AceSettingsPanel {
     allowedChars = settings.allowedChars
     keyboardLayout = settings.layout
     minQueryLength = settings.minQueryLength.toString()
+    invertUppercaseMode = settings.invertUppercaseMode
     editorFadeOpacityPercent = settings.editorFadeOpacity
     jumpModeColor = settings.jumpModeColor
     tagForegroundColor1 = settings.tagForegroundColor1

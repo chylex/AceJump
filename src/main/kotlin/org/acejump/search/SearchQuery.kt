@@ -21,7 +21,7 @@ internal sealed class SearchQuery {
   /**
    * Converts the query into a regular expression to find the initial matches.
    */
-  abstract fun toRegex(): Regex?
+  abstract fun toRegex(invertUppercaseMode: Boolean): Regex?
   
   /**
    * Searches for all occurrences of a literal text query.
@@ -41,14 +41,14 @@ internal sealed class SearchQuery {
       return text.countMatchingCharacters(offset, rawText)
     }
     
-    override fun toRegex(): Regex {
+    override fun toRegex(invertUppercaseMode: Boolean): Regex {
       val firstChar = rawText.first()
-      val pattern = if (firstChar.isLowerCase()) {
+      val pattern = if (firstChar.isLowerCase() xor invertUppercaseMode) {
         val fullPattern = Regex.escape(rawText)
         "(?i)$fullPattern"
       }
       else {
-        val firstCharUppercasePattern = Regex.escape(firstChar.toString())
+        val firstCharUppercasePattern = Regex.escape(firstChar.uppercase())
         val firstCharLowercasePattern = Regex.escape(firstChar.lowercase())
         val remainingPattern = if (rawText.length > 1) Regex.escape(rawText.drop(1)) else ""
         "(?:$firstCharUppercasePattern|(?<![a-zA-Z])$firstCharLowercasePattern)$remainingPattern"
@@ -72,7 +72,7 @@ internal sealed class SearchQuery {
       return 1
     }
     
-    override fun toRegex(): Regex {
+    override fun toRegex(invertUppercaseMode: Boolean): Regex {
       return Regex(pattern, setOf(RegexOption.MULTILINE, RegexOption.IGNORE_CASE))
     }
   }
